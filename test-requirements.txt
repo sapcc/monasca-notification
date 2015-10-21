@@ -1,6 +1,6 @@
-testtools==1.8.0
-mock==1.3.0
 hacking==0.10.2
+mock==1.3.0
+testtools==1.8.0
 pyflakes==0.8.1
 nose
 nosexcover
