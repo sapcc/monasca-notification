@@ -1,8 +1,8 @@
 testtools==1.8.0
-hacking>=0.9.6,<0.10
+mock==1.3.0
+hacking==0.10.2
 pyflakes==0.8.1
 nose
 nosexcover
-mock==1.3.0
 funcsigs
 sqlalchemy
