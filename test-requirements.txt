@@ -1,4 +1,4 @@
 mock>=1.0.1
+funcsigs
 nose
 nosexcover
-funcsigs
