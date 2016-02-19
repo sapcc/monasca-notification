@@ -1,5 +1,5 @@
-kafka-python>=0.9.1
-kazoo>=1.3
+kafka-python>=0.9.1,<1.0
+kazoo>=2.0
 pbr
 monasca-statsd
 requests
@@ -7,4 +7,8 @@ pymysql
 PyYAML
 six
 simport>=0.2.dev16
+iso8601
+PyMySQL>=0.6.7
+oslo.config
+ujson>=1.34
 monasca-common
