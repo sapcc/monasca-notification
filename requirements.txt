@@ -3,7 +3,6 @@ kazoo>=2.0
 pbr
 monasca-statsd
 requests
-pymysql
 PyYAML
 six
 simport>=0.2.dev16
