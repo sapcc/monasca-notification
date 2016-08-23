@@ -1,5 +1,5 @@
 # Copyright 2015 FUJITSU LIMITED
-# (C) Copyright 2015 Hewlett Packard Enterprise Development Company LP
+# (C) Copyright 2015,2016 Hewlett Packard Enterprise Development LP
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License. You may obtain a copy of the License at
@@ -63,13 +63,62 @@ class MysqlRepo(BaseRepo):
         try:
             if self._mysql is None:
                 self._connect_to_mysql()
-
             cur = self._mysql.cursor()
             cur.execute(self._find_alarm_action_sql, (alarm['alarmDefinitionId'], alarm['newState']))
 
             for row in cur:
-                yield (row[1].lower(), row[0], row[2])
+                yield (row[1].lower(), row[0], row[2], row[3])
         except pymysql.Error as e:
             self._mysql = None
             log.exception("Couldn't fetch alarms actions %s", e)
+            raise exc.DatabaseException(e)
+
+    def get_alarm_current_state(self, alarm_id):
+        try:
+            if self._mysql is None:
+                self._connect_to_mysql()
+            cur = self._mysql.cursor()
+            cur.execute(self._find_alarm_state_sql, alarm_id)
+            row = cur.fetchone()
+            state = row[0] if row is not None else None
+            return state
+        except pymysql.Error as e:
+            self._mysql = None
+            log.exception("Couldn't fetch the current alarm state %s", e)
+            raise exc.DatabaseException(e)
+
+    def fetch_notification_method_types(self):
+        try:
+            if self._mysql is None:
+                self._connect_to_mysql()
+            cur = self._mysql.cursor()
+            cur.execute(self._find_all_notification_types_sql)
+
+            for row in cur:
+                yield (row[0])
+        except pymysql.Error as e:
+            self._mysql = None
+            log.exception("Couldn't fetch notification types %s", e)
+            raise exc.DatabaseException(e)
+
+    def insert_notification_method_types(self, notification_types):
+        try:
+            if self._mysql is None:
+                self._connect_to_mysql()
+            cur = self._mysql.cursor()
+            cur.executemany(self._insert_notification_types_sql, notification_types)
+
+        except pymysql.IntegrityError as ignoredException:
+            # If multiple instances of the notification engine tries to write the
+            # same content at the same time, only one of them will succeed and others will
+            # get duplicate primary key, integrity error. We can safely ignore this error.
+            # This may happen only during the first start when the tables are empty.
+            code, mesg = ignoredException.args
+            if code == pymysql.constants.ER.DUP_ENTRY:
+                log.debug("Notification type exists in DB. Ignoring the exception  {}".format(mesg))
+            else:
+                raise exc.DatabaseException(ignoredException)
+        except pymysql.Error as e:
+            self._mysql = None
+            log.exception("Couldn't insert notification types %s", e)
             raise exc.DatabaseException(e)

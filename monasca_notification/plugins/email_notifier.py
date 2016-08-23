@@ -1,4 +1,4 @@
-# (C) Copyright 2015-2016 Hewlett Packard Enterprise Development Company LP
+# (C) Copyright 2015-2016 Hewlett Packard Enterprise Development LP
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ import email.mime.text
 import smtplib
 import time
 
-from abstract_notifier import AbstractNotifier
+from monasca_notification.plugins.abstract_notifier import AbstractNotifier
 
 EMAIL_SINGLE_HOST_BASE = u'''On host "{hostname}" for target "{target_host}" {message}
 
@@ -167,12 +167,12 @@ class EmailNotifier(AbstractNotifier):
 
                 msg = email.mime.text.MIMEText(text)
 
-                msg['Subject'] = u'{} {} "{}" for Host: {} Target: {}'\
-                    .format(notification.state,
-                            notification.severity,
-                            notification.alarm_name,
-                            hostname[0],
-                            targethost[0]).encode("utf-8")
+                msg['Subject'] = (u'{} {} "{}" for Host: {} Target: {}'
+                                  .format(notification.state,
+                                          notification.severity,
+                                          notification.alarm_name,
+                                          hostname[0],
+                                          targethost[0]).encode("utf-8"))
 
             else:
                 text = EMAIL_MULTIPLE_HOST_BASE.format(

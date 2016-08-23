@@ -1,4 +1,4 @@
-# (C) Copyright 2014-2016 Hewlett Packard Enterprise Development Company LP
+# (C) Copyright 2014-2016 Hewlett Packard Enterprise Development LP
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import time
 import unittest
 
 from monasca_notification.notification import Notification
-from monasca_notification.types import email_notifier
+from monasca_notification.plugins import email_notifier
 
 UNICODE_CHAR = unichr(2344)
 UNICODE_CHAR_ENCODED = UNICODE_CHAR.encode("utf-8")
@@ -90,7 +90,7 @@ class TestEmail(unittest.TestCase):
     def _smtbStubException(self, *arg, **kwargs):
         return smtpStubException(self.trap)
 
-    @mock.patch('monasca_notification.types.email_notifier.smtplib')
+    @mock.patch('monasca_notification.plugins.email_notifier.smtplib')
     def notify(self, smtp_stub, metric, mock_smtp):
         mock_smtp.SMTP = smtp_stub
 
@@ -104,7 +104,7 @@ class TestEmail(unittest.TestCase):
 
         alarm_dict = alarm(metric)
 
-        notification = Notification('email', 0, 1, 'email notification', 'me@here.com', 0, alarm_dict)
+        notification = Notification('email', 0, 1, 'email notification', 'me@here.com', 0, 0, alarm_dict)
 
         self.trap.append(email.send_notification(notification))
 
@@ -185,7 +185,7 @@ class TestEmail(unittest.TestCase):
         return_value = self.trap.pop(0)
         self.assertTrue(return_value)
 
-    @mock.patch('monasca_notification.types.email_notifier.smtplib')
+    @mock.patch('monasca_notification.plugins.email_notifier.smtplib')
     def test_smtp_sendmail_failed_connection_twice(self, mock_smtp):
         """Email that fails on smtp_connect twice
         """
@@ -222,14 +222,14 @@ class TestEmail(unittest.TestCase):
 
         alarm_dict = alarm(metrics)
 
-        notification = Notification('email', 0, 1, 'email notification', 'me@here.com', 0, alarm_dict)
+        notification = Notification('email', 0, 1, 'email notification', 'me@here.com', 0, 0, alarm_dict)
 
         self.trap.append(email.send_notification(notification))
 
         self.assertIn("SMTP server disconnected. Will reconnect and retry message.", self.trap)
         self.assertIn("Unable to connect to email server.", self.trap)
 
-    @mock.patch('monasca_notification.types.email_notifier.smtplib')
+    @mock.patch('monasca_notification.plugins.email_notifier.smtplib')
     def test_smtp_sendmail_smtp_None(self, mock_smtp):
         """Email that fails on smtp_connect twice
         """
@@ -268,7 +268,7 @@ class TestEmail(unittest.TestCase):
 
         alarm_dict = alarm(metrics)
 
-        notification = Notification('email', 0, 1, 'email notification', 'me@here.com', 0, alarm_dict)
+        notification = Notification('email', 0, 1, 'email notification', 'me@here.com', 0, 0, alarm_dict)
 
         email_result = email.send_notification(notification)
 
@@ -277,7 +277,7 @@ class TestEmail(unittest.TestCase):
                       .format(self.email_config['server']),
                       self.trap)
 
-    @mock.patch('monasca_notification.types.email_notifier.smtplib')
+    @mock.patch('monasca_notification.plugins.email_notifier.smtplib')
     def test_smtp_sendmail_failed_connection_once_then_email(self, mock_smtp):
         """Email that fails on smtp_connect once then email
         """
@@ -311,7 +311,7 @@ class TestEmail(unittest.TestCase):
 
         alarm_dict = alarm(metrics)
 
-        notification = Notification('email', 0, 1, 'email notification', 'me@here.com', 0, alarm_dict)
+        notification = Notification('email', 0, 1, 'email notification', 'me@here.com', 0, 0, alarm_dict)
 
         self.trap.append(email.send_notification(notification))
 
@@ -319,7 +319,7 @@ class TestEmail(unittest.TestCase):
         self.assertIn("Error sending Email Notification", self.trap)
         self.assertNotIn("Unable to connect to email server.", self.trap)
 
-    @mock.patch('monasca_notification.types.email_notifier.smtplib')
+    @mock.patch('monasca_notification.plugins.email_notifier.smtplib')
     def test_smtp_sendmail_failed_connection_once(self, mock_smtp):
         """Email that fails on smtp_connect once
         """
@@ -351,7 +351,7 @@ class TestEmail(unittest.TestCase):
 
         alarm_dict = alarm(metrics)
 
-        notification = Notification('email', 0, 1, 'email notification', 'me@here.com', 0, alarm_dict)
+        notification = Notification('email', 0, 1, 'email notification', 'me@here.com', 0, 0, alarm_dict)
 
         self.trap.append(email.send_notification(notification))
 
@@ -359,7 +359,7 @@ class TestEmail(unittest.TestCase):
         self.assertIn("Sent email to %s, notification %s"
                       % (notification.address, notification.to_json()), self.trap)
 
-    @mock.patch('monasca_notification.types.email_notifier.smtplib')
+    @mock.patch('monasca_notification.plugins.email_notifier.smtplib')
     def test_smtp_sendmail_failed_exception(self, mock_smtp):
         """Email that fails on exception
         """
@@ -391,7 +391,7 @@ class TestEmail(unittest.TestCase):
 
         alarm_dict = alarm(metrics)
 
-        notification = Notification('email', 0, 1, 'email notification', 'me@here.com', 0, alarm_dict)
+        notification = Notification('email', 0, 1, 'email notification', 'me@here.com', 0, 0, alarm_dict)
 
         self.trap.append(email.send_notification(notification))
 

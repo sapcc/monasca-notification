@@ -1,4 +1,4 @@
-# (C) Copyright 2015-2016 Hewlett Packard Enterprise Development Company LP
+# (C) Copyright 2015-2016 Hewlett Packard Enterprise Development LP
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -153,7 +153,7 @@ class TestInterface(unittest.TestCase):
 
         self.assertEqual(len(notifications), 3)
         self.assertEqual(sorted(notifications),
-                         ["email", "pagerduty", "webhook"])
+                         ["EMAIL", "PAGERDUTY", "WEBHOOK"])
 
     @mock.patch('monasca_notification.types.notifiers.email_notifier.smtplib')
     @mock.patch('monasca_notification.types.notifiers.log')
@@ -227,7 +227,7 @@ class TestInterface(unittest.TestCase):
         notifications = []
         notifications.append(Notification('email', 0, 1,
                                           'email notification',
-                                          'me@here.com', 0, alarm({})))
+                                          'me@here.com', 0, 0, alarm({})))
 
         notifiers.send_notifications(notifications)
 
@@ -253,7 +253,7 @@ class TestInterface(unittest.TestCase):
         notifications = []
         notifications.append(Notification('email', 0, 1,
                                           'email notification',
-                                          'me@here.com', 0, alarm({})))
+                                          'me@here.com', 0, 0, alarm({})))
 
         sent, failed, invalid = notifiers.send_notifications(notifications)
 
@@ -282,7 +282,7 @@ class TestInterface(unittest.TestCase):
         notifications = []
         notifications.append(Notification('pagerduty', 0, 1,
                                           'pagerduty notification',
-                                          'me@here.com', 0, alarm({})))
+                                          'me@here.com', 0, 0, alarm({})))
 
         sent, failed, invalid = notifiers.send_notifications(notifications)
 
@@ -315,13 +315,13 @@ class TestInterface(unittest.TestCase):
         notifications = []
         notifications.append(Notification('email', 0, 1,
                                           'email notification',
-                                          'me@here.com', 0, alarm({})))
+                                          'me@here.com', 0, 0, alarm({})))
         notifications.append(Notification('email', 0, 1,
                                           'email notification',
-                                          'foo@here.com', 0, alarm({})))
+                                          'foo@here.com', 0, 0, alarm({})))
         notifications.append(Notification('email', 0, 1,
                                           'email notification',
-                                          'bar@here.com', 0, alarm({})))
+                                          'bar@here.com', 0, 0, alarm({})))
 
         sent, failed, invalid = notifiers.send_notifications(notifications)
 
@@ -351,16 +351,43 @@ class TestInterface(unittest.TestCase):
         notifications = []
         notifications.append(Notification('email', 0, 1,
                                           'email notification',
-                                          'me@here.com', 0, alarm({})))
+                                          'me@here.com', 0, 0, alarm({})))
         notifications.append(Notification('email', 0, 1,
                                           'email notification',
-                                          'foo@here.com', 0, alarm({})))
+                                          'foo@here.com', 0, 0, alarm({})))
         notifications.append(Notification('email', 0, 1,
                                           'email notification',
-                                          'bar@here.com', 0, alarm({})))
+                                          'bar@here.com', 0, 0, alarm({})))
 
         notifiers.send_notifications(notifications)
 
         self.assertEqual(self.statsd.timer.timer_calls['email_time_start'], 3)
         self.assertEqual(self.statsd.timer.timer_calls['email_time_stop'], 3)
         self.assertEqual(self.statsd.counter.counter, 3)
+
+    def test_plugin_load(self):
+        config_dict = {"plugins": ["monasca_notification.plugins.hipchat_notifier:HipChatNotifier",
+                                   "monasca_notification.plugins.slack_notifier:SlackNotifier"]}
+
+        notifiers.init(self.statsd)
+        notifiers.load_plugins(config_dict)
+        self.assertEqual(len(notifiers.possible_notifiers), 5)
+
+        configured_plugins = ["email", "webhook", "pagerduty", "hipchat", "slack"]
+        for plugin in notifiers.configured_notifiers:
+            self.asssertIn(plugin.type in configured_plugins)
+
+    @mock.patch('monasca_notification.types.notifiers.log')
+    def test_invalid_plugin_load_exception_ignored(self, mock_log):
+        mock_log.exception = self.trap.append
+        config_dict = {"plugins": ["monasca_notification.plugins.hipchat_notifier:UnknownPlugin",
+                                   "monasca_notification.plugins.slack_notifier:SlackNotifier"]}
+
+        notifiers.init(self.statsd)
+        notifiers.load_plugins(config_dict)
+        self.assertEqual(len(notifiers.possible_notifiers), 4)
+        self.assertEqual(len(self.trap), 1)
+
+        configured_plugins = ["email", "webhook", "pagerduty", "slack"]
+        for plugin in notifiers.configured_notifiers:
+            self.asssertIn(plugin.type in configured_plugins)

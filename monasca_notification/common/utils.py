@@ -1,10 +1,10 @@
-# (C) Copyright 2014, 2015 Hewlett Packard Enterprise Development Company LP
+# (C) Copyright 2016 Hewlett Packard Enterprise Development Company LP
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#    http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,12 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-class NotificationException(Exception):
-    """Base exception class.
-    """
-    pass
+from monasca_common.simport import simport
 
 
-class AlarmFormatError(NotificationException):
-    pass
+def get_db_repo(config):
+    if 'database' in config and 'repo_driver' in config['database']:
+        return simport.load(config['database']['repo_driver'])(config)
+    else:
+        return simport.load('monasca_notification.common.repositories.mysql.mysql_repo:MysqlRepo')(config)
