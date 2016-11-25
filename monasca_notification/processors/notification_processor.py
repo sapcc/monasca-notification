@@ -26,12 +26,14 @@ log = logging.getLogger(__name__)
 class NotificationProcessor(base.BaseProcessor):
 
     def __init__(self, config):
-        self.statsd = monascastatsd.Client(name='monasca', dimensions=base.BaseProcessor.dimensions)
+        self.statsd = monascastatsd.Client(name=base.BaseProcessor.prefix, dimensions=base.BaseProcessor.dimensions)
         notifiers.init(self.statsd)
         notifiers.load_plugins(config['notification_types'])
         notifiers.config(config['notification_types'])
         self._db_repo = get_db_repo(config)
         self.insert_configured_plugins()
+        self._invalid_type_count = self.statsd.get_counter(name='invalid_type_count')
+        self._sent_failed_count = self.statsd.get_counter(name='send_failed_count')
 
     def insert_configured_plugins(self):
         """Persists configured plugin types in DB
@@ -53,15 +55,12 @@ class NotificationProcessor(base.BaseProcessor):
              If all notifications fail the alarm partition/offset are added to the finished queue
         """
 
-        invalid_type_count = self.statsd.get_counter(name='invalid_type_count')
-        sent_failed_count = self.statsd.get_counter(name='sent_failed_count')
-
         sent, failed, invalid = notifiers.send_notifications(notifications)
 
-        if failed:
-            sent_failed_count.increment(len(failed))
+        for notif in failed:
+            self._sent_failed_count.increment(1, dimensions={'notification_type': notif.type})
 
-        if invalid:
-            invalid_type_count.increment(len(invalid))
+        for notif in invalid:
+            self._invalid_type_count.increment(1, dimensions={'notification_type': notif.type})
 
         return sent, failed

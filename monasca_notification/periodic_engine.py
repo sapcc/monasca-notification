@@ -34,7 +34,7 @@ class PeriodicEngine(object):
         self._topic_name = config['kafka']['periodic'][period]
 
         self._statsd = monascastatsd.Client(
-            name='monasca',
+            name=base.BaseProcessor.prefix,
             dimensions=base.BaseProcessor.dimensions)
 
         zookeeper_path = config['zookeeper']['periodic_path'][period]

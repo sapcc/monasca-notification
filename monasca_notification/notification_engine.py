@@ -31,7 +31,7 @@ class NotificationEngine(object):
         self._topics = {}
         self._topics['notification_topic'] = config['kafka']['notification_topic']
         self._topics['retry_topic'] = config['kafka']['notification_retry_topic']
-        self._statsd = monascastatsd.Client(name='monasca',
+        self._statsd = monascastatsd.Client(name=BaseProcessor.prefix,
                                             dimensions=BaseProcessor.dimensions)
         self._consumer = consumer.KafkaConsumer(
             config['kafka']['url'],

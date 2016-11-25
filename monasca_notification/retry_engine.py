@@ -38,7 +38,7 @@ class RetryEngine(object):
         self._topics['retry_topic'] = config['kafka']['notification_retry_topic']
 
         self._statsd = monascastatsd.Client(
-            name='monasca',
+            name=base.BaseProcessor.prefix,
             dimensions=base.BaseProcessor.dimensions)
 
         self._consumer = consumer.KafkaConsumer(

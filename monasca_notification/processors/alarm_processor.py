@@ -32,7 +32,7 @@ class AlarmProcessor(base.BaseProcessor):
     def __init__(self, alarm_ttl, config):
         self._alarm_ttl = alarm_ttl
         self._statsd = monascastatsd.Client(
-            name='monasca',
+            name=base.BaseProcessor.prefix,
             dimensions=base.BaseProcessor.dimensions)
         self._db_repo = get_db_repo(config)
 

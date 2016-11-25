@@ -16,4 +16,5 @@
 
 class BaseProcessor(object):
 
+    prefix = 'monasca.notification'
     dimensions = {'service': 'monitoring', 'component': 'monasca-notification'}
