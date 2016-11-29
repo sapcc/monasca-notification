@@ -33,7 +33,7 @@ class NotificationProcessor(base.BaseProcessor):
         self._db_repo = get_db_repo(config)
         self.insert_configured_plugins()
         self._invalid_type_count = self.statsd.get_counter(name='invalid_type_count')
-        self._sent_failed_count = self.statsd.get_counter(name='send_failed_count')
+        self._sent_failed_count = self.statsd.get_counter(name='sent_failed_count')
 
     def insert_configured_plugins(self):
         """Persists configured plugin types in DB
