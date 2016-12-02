@@ -14,37 +14,26 @@
 # limitations under the License.
 
 import json
-import logging
-import monascastatsd
 import time
 
-from monasca_common.kafka import consumer
-from monasca_common.kafka import producer
+from kafka import common
+
+from monasca_notification.base_engine import BaseEngine
 from monasca_notification.common.repositories import exceptions
 from monasca_notification.common.utils import construct_notification_object
 from monasca_notification.common.utils import get_db_repo
-from processors import base
+from oslo_log import log as logging
 from processors import notification_processor
+
+from monitoring.metrics import KAFKA_PRODUCER_ERRORS, KAFKA_CONSUMER_ERRORS
 
 log = logging.getLogger(__name__)
 
 
-class PeriodicEngine(object):
+class PeriodicEngine(BaseEngine):
     def __init__(self, config, period):
-        self._topic_name = config['kafka']['periodic'][period]
-
-        self._statsd = monascastatsd.Client(
-            name=base.BaseProcessor.prefix,
-            dimensions=base.BaseProcessor.dimensions)
-
-        zookeeper_path = config['zookeeper']['periodic_path'][period]
-        self._consumer = consumer.KafkaConsumer(config['kafka']['url'],
-                                                config['zookeeper']['url'],
-                                                zookeeper_path,
-                                                config['kafka']['group'],
-                                                self._topic_name)
-
-        self._producer = producer.KafkaProducer(config['kafka']['url'])
+        super(PeriodicEngine, self).__init__(config, config['kafka']['periodic'][period],
+                                             config['zookeeper']['periodic_path'][period])
 
         self._notifier = notification_processor.NotificationProcessor(config)
         self._db_repo = get_db_repo(config)
@@ -72,31 +61,40 @@ class PeriodicEngine(object):
         return True
 
     def run(self):
-        for raw_notification in self._consumer:
-            message = raw_notification[1].message.value
-            notification_data = json.loads(message)
+        consumer_errors = self._statsd.get_counter(name=KAFKA_CONSUMER_ERRORS,
+                                                   dimensions={'topic': self._topic_name})
+        producer_errors = self._statsd.get_counter(name=KAFKA_PRODUCER_ERRORS,
+                                                   dimensions={'topic': self._topic_name})
+        try:
+            for raw_notification in self._consumer:
+                message = raw_notification[1].message.value
+                notification_data = json.loads(message)
 
-            notification = construct_notification_object(self._db_repo, notification_data)
+                notification = construct_notification_object(self._db_repo, notification_data)
 
-            if notification is None:
+                if notification is None:
+                    self._consumer.commit()
+                    continue
+
+                if self._keep_sending(notification.alarm_id,
+                                      notification.state,
+                                      notification.type,
+                                      notification.period):
+
+                    wait_duration = notification.period - (
+                        time.time() - notification_data['notification_timestamp'])
+
+                    if wait_duration > 0:
+                        time.sleep(wait_duration)
+
+                    notification.notification_timestamp = time.time()
+
+                    self._notifier.send([notification])
+                    self.publish_messages([notification], self._topic_name, producer_errors)
+
                 self._consumer.commit()
-                continue
 
-            if self._keep_sending(notification.alarm_id,
-                                  notification.state,
-                                  notification.type,
-                                  notification.period):
-
-                wait_duration = notification.period - (
-                    time.time() - notification_data['notification_timestamp'])
-
-                if wait_duration > 0:
-                    time.sleep(wait_duration)
-
-                notification.notification_timestamp = time.time()
-
-                self._notifier.send([notification])
-                self._producer.publish(self._topic_name,
-                                       [notification.to_json()])
-
-            self._consumer.commit()
+        except common.KafkaError:
+            log.exception("Notification encountered Kafka errors while reading alarms")
+            consumer_errors.increment(1)
+            raise
