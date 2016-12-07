@@ -16,6 +16,7 @@
 """Tests the notification class."""
 
 import json
+
 from monasca_notification import notification
 
 

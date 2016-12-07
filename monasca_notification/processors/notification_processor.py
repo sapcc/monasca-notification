@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import logging
+
 import monascastatsd
 
 from monasca_notification.common.utils import get_db_repo

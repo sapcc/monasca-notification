@@ -23,6 +23,7 @@ import argparse
 import json
 import logging
 import sys
+
 import yaml
 
 from monasca_notification import state_tracker

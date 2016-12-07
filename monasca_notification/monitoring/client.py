@@ -12,9 +12,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import monascastatsd
 import os
 
+import monascastatsd
 from oslo_config import cfg
 from oslo_log import log
 

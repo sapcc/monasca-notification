@@ -13,11 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import mock
 import smtplib
 import socket
 import time
 import unittest
+
+import mock
 
 from monasca_notification.notification import Notification
 from monasca_notification.plugins import email_notifier

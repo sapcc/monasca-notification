@@ -14,8 +14,9 @@
 # limitations under the License.
 
 import json
-import requests
 import urlparse
+
+import requests
 
 from monasca_notification.plugins import abstract_notifier
 
@@ -63,7 +64,7 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
         slack_request = {}
         slack_request['text'] = json.dumps(body, indent=3)
 
-        return slack_request
+        return json.dumps(slack_request)
 
     def send_notification(self, notification):
         """Send the notification via slack

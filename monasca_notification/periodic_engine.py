@@ -16,16 +16,13 @@
 import json
 import time
 
-from kafka import common
+from oslo_log import log as logging
 
 from monasca_notification.base_engine import BaseEngine
 from monasca_notification.common.repositories import exceptions
 from monasca_notification.common.utils import construct_notification_object
 from monasca_notification.common.utils import get_db_repo
-from oslo_log import log as logging
 from processors import notification_processor
-
-from monitoring.metrics import KAFKA_PRODUCER_ERRORS, KAFKA_CONSUMER_ERRORS
 
 log = logging.getLogger(__name__)
 
@@ -60,41 +57,31 @@ class PeriodicEngine(BaseEngine):
 
         return True
 
-    def run(self):
-        consumer_errors = self._statsd.get_counter(name=KAFKA_CONSUMER_ERRORS,
-                                                   dimensions={'topic': self._topic_name})
-        producer_errors = self._statsd.get_counter(name=KAFKA_PRODUCER_ERRORS,
-                                                   dimensions={'topic': self._topic_name})
-        try:
-            for raw_notification in self._consumer:
-                message = raw_notification[1].message.value
-                notification_data = json.loads(message)
+    def do_message(self, raw_notification):
+        message = raw_notification[1].message.value
+        notification_data = json.loads(message)
 
-                notification = construct_notification_object(self._db_repo, notification_data)
+        notification = construct_notification_object(self._db_repo, notification_data)
 
-                if notification is None:
-                    self._consumer.commit()
-                    continue
+        if notification is None:
+            self._consumer.commit()
+            return
 
-                if self._keep_sending(notification.alarm_id,
-                                      notification.state,
-                                      notification.type,
-                                      notification.period):
+        if self._keep_sending(notification.alarm_id,
+                              notification.state,
+                              notification.type,
+                              notification.period):
 
-                    wait_duration = notification.period - (
-                        time.time() - notification_data['notification_timestamp'])
+            wait_duration = notification.period - (
+                time.time() - notification_data['notification_timestamp'])
 
-                    if wait_duration > 0:
-                        time.sleep(wait_duration)
+            if wait_duration > 0:
+                time.sleep(wait_duration)
 
-                    notification.notification_timestamp = time.time()
+            notification.notification_timestamp = time.time()
 
-                    self._notifier.send([notification])
-                    self.publish_messages([notification], self._topic_name, producer_errors)
+            self._notifier.send([notification])
+            self.publish_messages([notification], self._topic_name)
 
-                self._consumer.commit()
+        self._consumer.commit()
 
-        except common.KafkaError:
-            log.exception("Notification encountered Kafka errors while reading alarms")
-            consumer_errors.increment(1)
-            raise

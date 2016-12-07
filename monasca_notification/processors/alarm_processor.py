@@ -15,15 +15,15 @@
 
 import json
 import logging
-import monascastatsd
 import time
 
-from monasca_notification.common.repositories import exceptions as exc
-from monasca_notification.common.utils import get_db_repo
+import monascastatsd
+
 from monasca_notification import notification
 from monasca_notification import notification_exceptions
+from monasca_notification.common.repositories import exceptions as exc
+from monasca_notification.common.utils import get_db_repo
 from monasca_notification.processors import base
-
 
 log = logging.getLogger(__name__)
 

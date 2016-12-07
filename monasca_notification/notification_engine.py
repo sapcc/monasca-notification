@@ -15,12 +15,10 @@
 
 import time
 
-from kafka import common
 from oslo_log import log as logging
 
 from monasca_notification.base_engine import BaseEngine
 from monasca_notification.monitoring.metrics import ALARMS_FINISHED_COUNT
-from monitoring.metrics import KAFKA_PRODUCER_ERRORS, KAFKA_CONSUMER_ERRORS
 from processors.alarm_processor import AlarmProcessor
 from processors.notification_processor import NotificationProcessor
 
@@ -35,6 +33,7 @@ class NotificationEngine(BaseEngine):
         self._topics['retry_topic'] = config['kafka']['notification_retry_topic']
         self._alarm_ttl = config['processors']['alarm']['ttl']
         self._alarms = AlarmProcessor(self._alarm_ttl, config)
+        self._finished_count = self._statsd.get_counter(name=ALARMS_FINISHED_COUNT)
         self._notifier = NotificationProcessor(config)
 
     def _add_periodic_notifications(self, notifications):
@@ -45,29 +44,17 @@ class NotificationEngine(BaseEngine):
                 self._producer.publish(self._config['kafka']['periodic'][topic],
                                        [notification.to_json()])
 
-    def run(self):
-        finished_count = self._statsd.get_counter(name=ALARMS_FINISHED_COUNT)
-        consumer_errors = self._statsd.get_counter(name=KAFKA_CONSUMER_ERRORS,
-                                                   dimensions={'topic': self._topic_name})
-        notification_producer_errors = self._statsd.get_counter(name=KAFKA_PRODUCER_ERRORS,
-                                                                dimensions={
-                                                                    'topic': self._topics['notification_topic']})
-        retry_producer_errors = self._statsd.get_counter(name=KAFKA_PRODUCER_ERRORS,
-                                                         dimensions={'topic': self._topics['retry_topic']})
-        try:
-            for alarm in self._consumer:
-                log.debug('Received alarm >|%s|<', str(alarm))
-                notifications, partition, offset = self._alarms.to_notification(alarm)
-                if notifications:
-                    self._add_periodic_notifications(notifications)
+    def do_message(self, alarm):
+        log.debug('Received alarm >|%s|<', str(alarm))
+        notifications, partition, offset = self._alarms.to_notification(alarm)
+        if notifications:
+            self._add_periodic_notifications(notifications)
 
-                    sent, failed = self._notifier.send(notifications)
-                    self.publish_messages(sent, self._topics['notification_topic'], notification_producer_errors)
-                    self.publish_messages(failed, self._topics['retry_topic'], retry_producer_errors)
+            sent, failed = self._notifier.send(notifications)
+            self.publish_messages(sent, self._topics['notification_topic'])
+            self.publish_messages(failed, self._topics['retry_topic'])
 
-                self._consumer.commit()
-                finished_count.increment()
-        except common.KafkaError:
-            log.exception("Notification encountered Kafka errors while reading alarms")
-            consumer_errors.increment(1)
-            raise
+
+        self._consumer.commit()
+
+        self._finished_count.increment()

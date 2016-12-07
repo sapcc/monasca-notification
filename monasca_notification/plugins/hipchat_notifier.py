@@ -14,8 +14,9 @@
 # limitations under the License.
 
 import json
-import requests
 import urlparse
+
+import requests
 
 from monasca_notification.plugins import abstract_notifier
 

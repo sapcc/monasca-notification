@@ -15,9 +15,10 @@
 
 """Tests NotificationProcessor"""
 
-import mock
 import time
 import unittest
+
+import mock
 
 from monasca_notification import notification as m_notification
 from monasca_notification.processors import notification_processor

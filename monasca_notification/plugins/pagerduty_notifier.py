@@ -14,10 +14,10 @@
 # limitations under the License.
 
 import json
+
 import requests
 
 from monasca_notification.plugins import abstract_notifier
-
 
 VALID_HTTP_CODES = [200, 201, 204]
 

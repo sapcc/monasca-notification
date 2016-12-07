@@ -19,6 +19,7 @@ import time
 from jinja2 import Template
 from jinja2 import TemplateSyntaxError
 from monasca_common.simport import simport
+
 from monasca_notification.plugins import email_notifier
 from monasca_notification.plugins import pagerduty_notifier
 from monasca_notification.plugins import webhook_notifier

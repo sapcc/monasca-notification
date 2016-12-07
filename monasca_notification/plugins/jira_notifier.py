@@ -13,11 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from jinja2 import Template
-import jira
 import json
 import urlparse
+
+import jira
 import yaml
+from jinja2 import Template
 
 from monasca_notification.plugins.abstract_notifier import AbstractNotifier
 

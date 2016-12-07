@@ -13,12 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-import mock
 import Queue
-import requests
+import json
 import time
 import unittest
+
+import mock
+import requests
 
 from monasca_notification import notification as m_notification
 from monasca_notification.plugins import pagerduty_notifier
