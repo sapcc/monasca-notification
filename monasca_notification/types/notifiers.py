@@ -128,6 +128,7 @@ def _enrich(notification):
 def send_single_notification(notification):
     ntype = notification.type
     try:
+        _enrich(notification)
         return configured_notifiers[ntype].send_notification(notification)
     except Exception:
         log.exception("send_notification exception for {}".format(ntype))

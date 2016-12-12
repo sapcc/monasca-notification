@@ -50,9 +50,9 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
     def _build_slack_message(self, notification):
         """Builds slack message body
         """
-        slack_request =  dict(text=notification.raw_alarm['alarmDescription'])
+        slack_request =  dict(text=notification['alarmDescription'])
 
-        return json.dumps(slack_request)
+        return slack_request
 
     def send_notification(self, notification):
         """Send the notification via slack
