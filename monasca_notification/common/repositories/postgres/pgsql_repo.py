@@ -12,10 +12,11 @@
 # the License.
 
 import logging
+
 import psycopg2
 
-from monasca_notification.common.repositories.base import base_repo
 from monasca_notification.common.repositories import exceptions as exc
+from monasca_notification.common.repositories.base import base_repo
 
 log = logging.getLogger(__name__)
 

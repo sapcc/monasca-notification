@@ -16,6 +16,8 @@
 import logging
 import time
 
+from jinja2 import Template
+from jinja2 import TemplateSyntaxError
 from monasca_common.simport import simport
 from monasca_notification.plugins import email_notifier
 from monasca_notification.plugins import pagerduty_notifier
@@ -99,6 +101,27 @@ def send_notifications(notifications):
             failed.append(notification)
 
     return sent, failed, invalid
+
+
+def _enrich(notification):
+    template_vars = {}
+    for metric in notification['metrics']:
+        for k, v in metric['dimensions'].iteritems():
+            old = template_vars.get(k)
+            if not old:
+                template_vars[k] = v
+            elif isinstance(old, set):
+                old.add(v)
+            else:
+                template_vars[k] = {old, v}
+
+    # attempt interpreting description as Jinja2 template
+    try:
+        notification['alarmDescription'] = Template(notification['alarmDescription']).render(**template_vars)
+    except TemplateSyntaxError:
+        pass
+    except Exception:
+        log.exception("failed rendering alarm-definition: %s", notification['alarmDescription'])
 
 
 def send_single_notification(notification):

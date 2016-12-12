@@ -12,10 +12,11 @@
 # the License.
 
 import logging
+
 import pymysql
 
-from monasca_notification.common.repositories.base import base_repo
 from monasca_notification.common.repositories import exceptions as exc
+from monasca_notification.common.repositories.base import base_repo
 
 log = logging.getLogger(__name__)
 

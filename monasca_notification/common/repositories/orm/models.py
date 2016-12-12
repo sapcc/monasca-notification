@@ -21,6 +21,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from datetime import datetime
+
 from sqlalchemy import Column, String, Integer, Enum, DateTime, ForeignKey, Table
 
 ALARM_STATES = ('UNDETERMINED', 'OK', 'ALARM')

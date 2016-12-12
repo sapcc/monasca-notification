@@ -12,9 +12,10 @@
 # the License.
 
 import logging
+
 from sqlalchemy import engine_from_config, MetaData
-from sqlalchemy.sql import select, bindparam, and_
 from sqlalchemy.exc import DatabaseError
+from sqlalchemy.sql import select, bindparam, and_
 
 from monasca_notification.common.repositories import exceptions as exc
 from monasca_notification.common.repositories.orm import models
