@@ -35,6 +35,13 @@ class BaseEngine(object):
             self._producer_errors.increment(1, sample_rate=1.0, dimensions={'topic': topic})
             raise
 
+    def do_message(self, message):
+        """
+        redefine this method to actually send messages
+        :param message: message to be sent
+        """
+        raise NotImplemented
+
     def run(self):
         try:
             for message in self._consumer:
