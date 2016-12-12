@@ -50,19 +50,7 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
     def _build_slack_message(self, notification):
         """Builds slack message body
         """
-        body = {'alarm_id': notification.alarm_id,
-                'alarm_definition_id': notification.raw_alarm['alarmDefinitionId'],
-                'alarm_name': notification.alarm_name,
-                'alarm_description': notification.raw_alarm['alarmDescription'],
-                'alarm_timestamp': notification.alarm_timestamp,
-                'state': notification.state,
-                'old_state': notification.raw_alarm['oldState'],
-                'message': notification.message,
-                'tenant_id': notification.tenant_id,
-                'metrics': notification.metrics}
-
-        slack_request = {}
-        slack_request['text'] = json.dumps(body, indent=3)
+        slack_request=dict(text=notification['alarmDescription'])
 
         return json.dumps(slack_request)
 
@@ -89,7 +77,6 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
         if (self._config.get("ca_certs")):
             verify = self._config.get("ca_certs")
 
-        # set HTTPS proxy if needed (there is not unprotected public endpoint out there)
         proxyDict = None
         if (self._config.get("proxy")):
             proxyDict = {"https": self._config.get("proxy")}

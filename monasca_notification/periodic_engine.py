@@ -84,4 +84,3 @@ class PeriodicEngine(BaseEngine):
             self.publish_messages([notification], self._topic_name)
 
         self._consumer.commit()
-
