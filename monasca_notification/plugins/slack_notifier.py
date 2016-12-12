@@ -52,7 +52,7 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
         """
         slack_request =  dict(text=notification.alarm_description)
 
-        return json.dumps(slack_request)
+        return slack_request
 
     def send_notification(self, notification):
         """Send the notification via slack
