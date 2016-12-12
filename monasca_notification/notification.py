@@ -24,6 +24,7 @@ class Notification(object):
         'address',
         'alarm_id',
         'alarm_name',
+        'alarm_description',
         'alarm_timestamp',
         'id',
         'message',
