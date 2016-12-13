@@ -95,11 +95,11 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
               response = result.json()
               if response.get('ok'):
                 self._log.debug("Notification successfully posted.")
-                return True
               else:
                 self._log.warning("Received an error message {} when trying to send to slack on URL {}."
                                   .format(response.get("error"), url))
-            return False
+                return False
+            return True
         except Exception as ex:
             self._log.exception("Error trying to send to slack  on URL {}: {}".format(url, ex.message))
             return False
