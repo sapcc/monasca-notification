@@ -90,21 +90,16 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
                                    params=query_params,
                                    proxies=proxyDict,
                                    timeout=self._config['timeout'])
-
-            if result.status_code not in range(200, 300):
-                self._log.error("Received an HTTP code {} when trying to post on URL {}."
-                                .format(result.status_code, url))
-                return False
-
-            # Slack returns 200 ok even if the token is invalid. Response has valid error message
-            response = json.loads(result.text)
-            if response.get('ok'):
-                self._log.info("Notification successfully posted.")
+            result.raise_for_status()
+            if result.headers['content-type'] == 'application/json':
+              response = result.json()
+              if response.get('ok'):
+                self._log.debug("Notification successfully posted.")
                 return True
-            else:
-                self._log.error("Received an error message {} when trying to send to slack on URL {}."
-                                .format(response.get("error"), url))
-                return False
-        except Exception:
-            self._log.exception("Error trying to send to slack  on URL {}".format(url))
+              else:
+                self._log.warning("Received an error message {} when trying to send to slack on URL {}."
+                                  .format(response.get("error"), url))
+            return False
+        except Exception as ex:
+            self._log.exception("Error trying to send to slack  on URL {}: {}".format(url, ex.message))
             return False
