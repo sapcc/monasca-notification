@@ -17,6 +17,8 @@ import json
 import logging
 
 import time
+
+import datetime
 from jinja2 import Template
 from jinja2 import TemplateSyntaxError
 
@@ -108,7 +110,8 @@ class Notification(object):
         # add additional variables (TODO: add the metric value)
         template_vars = self.dimensions.copy()
         template_vars['_age'] = self.alarm_age
-        template_vars['_timestamp'] = self.alarm_timestamp
+        utc = str(datetime.datetime.utcfromtimestamp(self.alarm_timestamp)).replace(" ", "T")[:-7] + 'Z'
+        template_vars['_timestamp'] = utc
         template_vars['_state'] = self.state
 
         # attempt interpreting description as Jinja2 template
