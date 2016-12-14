@@ -14,6 +14,13 @@
 # limitations under the License.
 
 import json
+import logging
+
+import time
+from jinja2 import Template
+from jinja2 import TemplateSyntaxError
+
+log = logging.getLogger(__name__)
 
 
 class Notification(object):
@@ -68,6 +75,7 @@ class Notification(object):
         self.alarm_description = alarm['alarmDescription']
         # The event timestamp is in milliseconds
         self.alarm_timestamp = alarm['timestamp'] / 1000
+        self.alarm_age = time.time() - self.alarm_timestamp
         self.message = alarm['stateChangeReason']
         self.state = alarm['newState']
         self.severity = alarm['severity']
@@ -82,6 +90,32 @@ class Notification(object):
         # set periodic topic
         self.periodic_topic = period
         self.period = period
+
+        # collect alarm dimensions and render alarm-description as needed
+        self.dimensions = {}
+        for metric in self.metrics:
+            for k, v in metric['dimensions'].iteritems():
+                old = self.dimensions.get(k)
+                if not old:
+                    self.dimensions[k] = v
+                elif isinstance(old, set):
+                    old.add(v)
+                else:
+                    self.dimensions[k] = {old, v}
+
+        # add additional variables (TODO: add the metric value)
+        template_vars = self.dimensions.copy()
+        template_vars['_age'] = self.alarm_age
+        template_vars['_timestamp'] = self.alarm_timestamp
+        template_vars['_state'] = self.state
+
+        # attempt interpreting description as Jinja2 template
+        try:
+            self.alarm_description = Template(self.alarm_description).render(**template_vars)
+        except TemplateSyntaxError:
+            pass
+        except Exception:
+            log.exception("failed rendering alarm-definition: %s", self.alarm_description)
 
     def __eq__(self, other):
         if not isinstance(other, Notification):

@@ -104,31 +104,9 @@ def send_notifications(notifications):
     return sent, failed, invalid
 
 
-def _enrich(notification):
-    template_vars = {}
-    for metric in notification.metrics:
-        for k, v in metric['dimensions'].iteritems():
-            old = template_vars.get(k)
-            if not old:
-                template_vars[k] = v
-            elif isinstance(old, set):
-                old.add(v)
-            else:
-                template_vars[k] = {old, v}
-
-    # attempt interpreting description as Jinja2 template
-    try:
-        notification.alarm_description = Template(notification.alarm_description).render(**template_vars)
-    except TemplateSyntaxError:
-        pass
-    except Exception:
-        log.exception("failed rendering alarm-definition: %s", notification.alarm_description)
-
-
 def send_single_notification(notification):
     ntype = notification.type
     try:
-        _enrich(notification)
         return configured_notifiers[ntype].send_notification(notification)
     except Exception:
         log.exception("send_notification exception for {}".format(ntype))

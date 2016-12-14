@@ -17,6 +17,8 @@ import json
 import urlparse
 
 import requests
+from jinja2 import Template
+from jinja2 import TemplateSyntaxError
 
 from monasca_notification.plugins import abstract_notifier
 
@@ -30,14 +32,18 @@ from monasca_notification.plugins import abstract_notifier
 
 """
 
+log = logging.getLogger(__name__)
+
 
 class SlackNotifier(abstract_notifier.AbstractNotifier):
     def __init__(self, log):
         self._log = log
+        self._template = None
 
     def config(self, config_dict):
-        self._config = {'timeout': 5}
-        self._config.update(config_dict)
+        super(SlackNotifier, self).config(config_dict)
+        if self.config.template_text:
+            self._template = Template(self.template_text)
 
     @property
     def type(self):
@@ -50,9 +56,21 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
     def _build_slack_message(self, notification):
         """Builds slack message body
         """
-        slack_request = dict(text=notification.alarm_description)
+        if self._template:
+            template_vars = notification.__dict__
+            try:
+                text = self._template.render(**template_vars)
+                if not self._template_mime_type or self._template_mime_type == "text/plain":
+                    return dict(text=text)
+                elif self._template_mime_type == "application/json":
+                    return json.loads(text)
+                else:
+                    log.error('Invalid configuration of Slack plugin. Unsupported template.mime_type: %s',
+                              self._template_mime_type)
+            except TemplateSyntaxError:
+                log.exception('Formatting of Slack notification template failed')
 
-        return json.dumps(slack_request)
+        return dict(text='%s - %s: %s'.format(notification.state, notification.alarm_description, notification.message))
 
     def send_notification(self, notification):
         """Send the notification via slack
@@ -72,24 +90,24 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
         url = urlparse.urljoin(address, urlparse.urlparse(address).path)
 
         # Default option is to do cert verification
-        verify = self._config.get('insecure', False)
+        verify = self.config.get('insecure', False)
         # If ca_certs is specified, do cert validation and ignore insecure flag
-        if (self._config.get("ca_certs")):
-            verify = self._config.get("ca_certs")
+        if (self.config.get("ca_certs")):
+            verify = self.config.get("ca_certs")
 
         proxyDict = None
-        if (self._config.get("proxy")):
-            proxyDict = {"https": self._config.get("proxy")}
+        if (self.config.get("proxy")):
+            proxyDict = {"https": self.config.get("proxy")}
 
         try:
             # Posting on the given URL
             self._log.debug("Sending to the url {0} , with query_params {1}".format(url, query_params))
             result = requests.post(url=url,
-                                   data=slack_message,
+                                   json=slack_message,
                                    verify=verify,
                                    params=query_params,
                                    proxies=proxyDict,
-                                   timeout=self._config['timeout'])
+                                   timeout=self.config['timeout'])
             result.raise_for_status()
             if result.headers['content-type'] == 'application/json':
               response = result.json()

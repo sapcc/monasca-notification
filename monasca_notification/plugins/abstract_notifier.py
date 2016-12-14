@@ -22,7 +22,8 @@ import six
 class AbstractNotifier(object):
 
     def __init__(self):
-        pass
+        self.template_text = None
+        self.template_mime_type = None
 
     @abc.abstractproperty
     def type(self):
@@ -32,9 +33,16 @@ class AbstractNotifier(object):
     def statsd_name(self):
         pass
 
-    @abc.abstractmethod
-    def config(self, config):
-        pass
+    def config(self, config_dict):
+        self.config = {'timeout': 5}
+        self.config.update(config_dict)
+        tpl = self.config.get('template')
+        if tpl:
+            self.template_text = tpl.get('text')
+            if not self.template_text:
+                tpl_path = tpl['template_file']
+                self.template_text = open(tpl_path, 'r').read()
+            self.template_mime_type = tpl.get('mime_type')
 
     @abc.abstractmethod
     def send_notification(self, notification):
