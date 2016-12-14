@@ -34,6 +34,7 @@ class Notification(object):
         'alarm_description',
         'alarm_timestamp',
         'alarm_age',
+        'dimensions',
         'id',
         'message',
         'name',
