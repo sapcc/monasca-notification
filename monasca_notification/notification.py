@@ -110,8 +110,7 @@ class Notification(object):
         # add additional variables (TODO: add the metric value)
         template_vars = self.dimensions.copy()
         template_vars['_age'] = self.alarm_age
-        utc = str(datetime.datetime.utcfromtimestamp(self.alarm_timestamp)).replace(" ", "T")[:-7] + 'Z'
-        template_vars['_timestamp'] = utc
+        template_vars['_timestamp'] = str(datetime.datetime.utcfromtimestamp(self.alarm_timestamp)).replace(" ", "T")[:-7] + 'Z'
         template_vars['_state'] = self.state
 
         # attempt interpreting description as Jinja2 template

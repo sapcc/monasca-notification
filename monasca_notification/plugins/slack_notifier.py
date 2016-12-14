@@ -43,7 +43,7 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
 
     def config(self, config_dict):
         super(SlackNotifier, self).config(config_dict)
-        if self.config.template_text:
+        if self.template_text:
             self._template = Template(self.template_text)
 
     @property

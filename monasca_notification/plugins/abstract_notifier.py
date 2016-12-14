@@ -22,6 +22,7 @@ import six
 class AbstractNotifier(object):
 
     def __init__(self):
+        self.config = None
         self.template_text = None
         self.template_mime_type = None
 
