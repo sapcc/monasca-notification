@@ -14,12 +14,9 @@
 # limitations under the License.
 
 import json
-import logging
 import urlparse
 
 import requests
-from jinja2 import Template
-from jinja2 import TemplateSyntaxError
 
 from monasca_notification.plugins import abstract_notifier
 
@@ -33,18 +30,14 @@ from monasca_notification.plugins import abstract_notifier
 
 """
 
-log = logging.getLogger(__name__)
-
 
 class SlackNotifier(abstract_notifier.AbstractNotifier):
     def __init__(self, log):
+        super(SlackNotifier, self).__init__()
         self._log = log
-        self._template = None
 
     def config(self, config_dict):
         super(SlackNotifier, self).config(config_dict)
-        if self.template_text:
-            self._template = Template(self.template_text)
 
     @property
     def type(self):
@@ -59,17 +52,14 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
         """
         if self._template:
             template_vars = notification.__dict__
-            try:
-                text = self._template.render(**template_vars)
-                if not self._template_mime_type or self._template_mime_type == "text/plain":
-                    return dict(text=text)
-                elif self._template_mime_type == "application/json":
-                    return json.loads(text)
-                else:
-                    log.error('Invalid configuration of Slack plugin. Unsupported template.mime_type: %s',
-                              self._template_mime_type)
-            except TemplateSyntaxError:
-                log.exception('Formatting of Slack notification template failed')
+            text = self._template.render(**template_vars)
+            if not self._template_mime_type or self._template_mime_type == "text/plain":
+                return dict(text=text)
+            elif self._template_mime_type == "application/json":
+                return json.loads(text)
+            else:
+                self._log.error('Invalid configuration of Slack plugin. Unsupported template.mime_type: %s',
+                                self._template_mime_type)
 
         return dict(text='%s - %s: %s'.format(notification.state, notification.alarm_description, notification.message))
 
@@ -93,12 +83,12 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
         # Default option is to do cert verification
         verify = self.config.get('insecure', False)
         # If ca_certs is specified, do cert validation and ignore insecure flag
-        if (self.config.get("ca_certs")):
+        if self.config.get("ca_certs"):
             verify = self.config.get("ca_certs")
 
-        proxyDict = None
-        if (self.config.get("proxy")):
-            proxyDict = {"https": self.config.get("proxy")}
+        proxy_dict = None
+        if self.config.get("proxy"):
+            proxy_dict = {"https": self.config.get("proxy")}
 
         try:
             # Posting on the given URL
@@ -107,17 +97,18 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
                                    json=slack_message,
                                    verify=verify,
                                    params=query_params,
-                                   proxies=proxyDict,
+                                   proxies=proxy_dict,
                                    timeout=self.config['timeout'])
             result.raise_for_status()
             if result.headers['content-type'] == 'application/json':
-              response = result.json()
-              if response.get('ok'):
-                self._log.debug("Notification successfully posted.")
-              else:
-                self._log.warning("Received an error message {} when trying to send to slack on URL {}."
-                                  .format(response.get("error"), url))
+                response = result.json()
+                if response.get('ok'):
+                    self._log.debug("Notification successfully posted.")
+                else:
+                    self._log.warning("Received an error message {} when trying to send to slack on URL {}."
+                                      .format(response.get("error"), url))
                 return False
+
             return True
         except Exception as ex:
             self._log.exception("Error trying to send to slack  on URL {}: {}".format(url, ex.message))

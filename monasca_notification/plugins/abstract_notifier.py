@@ -16,6 +16,7 @@
 import abc
 
 import six
+from jinja2 import Template
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -25,6 +26,7 @@ class AbstractNotifier(object):
         self.config = None
         self.template_text = None
         self.template_mime_type = None
+        self.template = None
 
     @abc.abstractproperty
     def type(self):
@@ -44,6 +46,7 @@ class AbstractNotifier(object):
                 tpl_path = tpl['template_file']
                 self.template_text = open(tpl_path, 'r').read()
             self.template_mime_type = tpl.get('mime_type')
+            self.template = Template(self.template_text)
 
     @abc.abstractmethod
     def send_notification(self, notification):

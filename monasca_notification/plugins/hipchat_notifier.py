@@ -40,6 +40,7 @@ from monasca_notification.plugins import abstract_notifier
 
 class HipChatNotifier(abstract_notifier.AbstractNotifier):
     def __init__(self, log):
+        super(HipChatNotifier, self).__init__()
         self._log = log
 
     def config(self, config_dict):

@@ -57,6 +57,7 @@ class JiraNotifier(AbstractNotifier):
     _search_query = search_query = "project={} and reporter='{}' and summary ~ '{}'"
 
     def __init__(self, log):
+        super(JiraNotifier, self).__init__()
         self._log = log
         self.jira_fields_format = None
 

@@ -52,6 +52,7 @@ With dimensions
 
 class EmailNotifier(abstract_notifier.AbstractNotifier):
     def __init__(self, log):
+        super(EmailNotifier, self).__init__()
         self._log = log
         self._smtp = None
 

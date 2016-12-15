@@ -24,6 +24,7 @@ VALID_HTTP_CODES = [200, 201, 204]
 
 class PagerdutyNotifier(abstract_notifier.AbstractNotifier):
     def __init__(self, log):
+        super(PagerdutyNotifier, self).__init__()
         self._log = log
 
     def config(self, config):
