@@ -43,10 +43,6 @@ class HipChatNotifier(abstract_notifier.AbstractNotifier):
         super(HipChatNotifier, self).__init__()
         self._log = log
 
-    def config(self, config_dict):
-        self._config = {'timeout': 5}
-        self._config.update(config_dict)
-
     @property
     def type(self):
         return "hipchat"

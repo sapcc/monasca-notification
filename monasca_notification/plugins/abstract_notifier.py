@@ -23,7 +23,7 @@ from jinja2 import Template
 class AbstractNotifier(object):
 
     def __init__(self):
-        self.config = None
+        self._config = None
         self.template_text = None
         self.template_mime_type = None
         self.template = None
@@ -37,9 +37,9 @@ class AbstractNotifier(object):
         pass
 
     def config(self, config_dict):
-        self.config = {'timeout': 5}
-        self.config.update(config_dict)
-        tpl = self.config.get('template')
+        self._config = {'timeout': 5}
+        self._config.update(config_dict)
+        tpl = self._config.get('template')
         if tpl:
             self.template_text = tpl.get('text')
             if not self.template_text:

@@ -27,11 +27,9 @@ class PagerdutyNotifier(abstract_notifier.AbstractNotifier):
         super(PagerdutyNotifier, self).__init__()
         self._log = log
 
-    def config(self, config):
-        self._config = {
-            'timeout': 5,
-            'url': 'https://events.pagerduty.com/generic/2010-04-15/create_event.json'}
-        self._config.update(config)
+    def config(self, config_dict):
+        super(PagerdutyNotifier, self).config(config_dict)
+        self._config['url'] = 'https://events.pagerduty.com/generic/2010-04-15/create_event.json'
 
     @property
     def type(self):

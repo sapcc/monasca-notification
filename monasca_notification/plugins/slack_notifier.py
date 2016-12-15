@@ -81,14 +81,14 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
         url = urlparse.urljoin(address, urlparse.urlparse(address).path)
 
         # Default option is to do cert verification
-        verify = self.config.get('insecure', False)
+        verify = self._config.get('insecure', False)
         # If ca_certs is specified, do cert validation and ignore insecure flag
-        if self.config.get("ca_certs"):
-            verify = self.config.get("ca_certs")
+        if self._config.get("ca_certs"):
+            verify = self._config.get("ca_certs")
 
         proxy_dict = None
-        if self.config.get("proxy"):
-            proxy_dict = {"https": self.config.get("proxy")}
+        if self._config.get("proxy"):
+            proxy_dict = {"https": self._config.get("proxy")}
 
         try:
             # Posting on the given URL

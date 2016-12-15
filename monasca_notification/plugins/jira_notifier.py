@@ -62,13 +62,12 @@ class JiraNotifier(AbstractNotifier):
         self.jira_fields_format = None
 
     def config(self, config_dict):
-        self._config = {'timeout': 5}
+        super(JiraNotifier, self).config(config_dict)
         if not config_dict.get("user") and not config_dict.get("password"):
             message = "Missing user and password settings in JIRA plugin configuration"
             self._log.exception(message)
             raise Exception(message)
 
-        self._config.update(config_dict)
         self.jira_fields_format = self._get_jira_custom_format_fields()
 
     @property

@@ -24,10 +24,6 @@ class WebhookNotifier(abstract_notifier.AbstractNotifier):
     def __init__(self, log):
         self._log = log
 
-    def config(self, config_dict):
-        self._config = {'timeout': 5}
-        self._config.update(config_dict)
-
     @property
     def type(self):
         return "webhook"
