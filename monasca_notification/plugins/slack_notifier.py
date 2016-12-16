@@ -61,7 +61,7 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
                 self._log.error('Invalid configuration of Slack plugin. Unsupported template.mime_type: %s',
                                 self._template_mime_type)
 
-        return dict(text='%s - %s: %s'.format(notification.state, notification.alarm_description, notification.message))
+        return dict(text='{} - {}: {}'.format(notification.state, notification.alarm_description, notification.message))
 
     def send_notification(self, notification):
         """Send the notification via slack
