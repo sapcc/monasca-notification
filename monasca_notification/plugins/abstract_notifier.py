@@ -46,7 +46,7 @@ class AbstractNotifier(object):
                 tpl_path = tpl['template_file']
                 self._template_text = open(tpl_path, 'r').read()
             self._template_mime_type = tpl.get('mime_type')
-            self._template = Template(self.template_text)
+            self._template = Template(self._template_text)
 
     @abc.abstractmethod
     def send_notification(self, notification):
