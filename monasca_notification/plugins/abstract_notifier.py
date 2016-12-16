@@ -24,9 +24,9 @@ class AbstractNotifier(object):
 
     def __init__(self):
         self._config = None
-        self.template_text = None
-        self.template_mime_type = None
-        self.template = None
+        self._template_text = None
+        self._template_mime_type = None
+        self._template = None
 
     @abc.abstractproperty
     def type(self):
@@ -41,12 +41,12 @@ class AbstractNotifier(object):
         self._config.update(config_dict)
         tpl = self._config.get('template')
         if tpl:
-            self.template_text = tpl.get('text')
-            if not self.template_text:
+            self._template_text = tpl.get('text')
+            if not self._template_text:
                 tpl_path = tpl['template_file']
-                self.template_text = open(tpl_path, 'r').read()
-            self.template_mime_type = tpl.get('mime_type')
-            self.template = Template(self.template_text)
+                self._template_text = open(tpl_path, 'r').read()
+            self._template_mime_type = tpl.get('mime_type')
+            self._template = Template(self.template_text)
 
     @abc.abstractmethod
     def send_notification(self, notification):
