@@ -98,7 +98,7 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
                                    verify=verify,
                                    params=query_params,
                                    proxies=proxy_dict,
-                                   timeout=self.config['timeout'])
+                                   timeout=self._config['timeout'])
             result.raise_for_status()
             if result.headers['content-type'] == 'application/json':
                 response = result.json()
