@@ -85,6 +85,6 @@ def get_statsd_client(config, dimensions=None):
                                       port=config['statsd'].get('port', 8125),
                                       dimensions=local_dims)
     else:
-        client = monascastatsd.Client(name='monasca',
+        client = monascastatsd.Client(name='monasca.notification',
                                       dimensions=local_dims)
     return client

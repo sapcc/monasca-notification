@@ -51,7 +51,7 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
         """Builds slack message body
         """
         if self._template:
-            template_vars = notification.__dict__
+            template_vars = notification.to_dict()
             text = self._template.render(**template_vars)
             if not self._template_mime_type or self._template_mime_type == "text/plain":
                 return dict(text=text)

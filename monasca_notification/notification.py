@@ -135,8 +135,12 @@ class Notification(object):
         return not self.__eq__(other)
 
     def to_json(self):
+        notification_data = self.to_dict()
+        return json.dumps(notification_data)
+
+    def to_dict(self):
         """Return json representation
-        """
+            """
         notification_fields = [
             'id',
             'type',
@@ -160,4 +164,4 @@ class Notification(object):
         ]
         notification_data = {name: getattr(self, name)
                              for name in notification_fields}
-        return json.dumps(notification_data)
+        return notification_data
