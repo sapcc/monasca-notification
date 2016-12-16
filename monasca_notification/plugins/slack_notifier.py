@@ -56,7 +56,11 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
             if not self._template_mime_type or self._template_mime_type == "text/plain":
                 return dict(text=text)
             elif self._template_mime_type == "application/json":
-                return json.loads(text)
+                try:
+                    return json.loads(text)
+                except ValueError as ex:
+                    self._log.exception("Invalid JSON template for Slack plugin")
+                    self._log.error("Rendered template:\n%s", text)
             else:
                 self._log.error('Invalid configuration of Slack plugin. Unsupported template.mime_type: %s',
                                 self._template_mime_type)
