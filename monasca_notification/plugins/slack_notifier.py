@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import json
+import re
 import urlparse
 
 import requests
@@ -52,6 +53,7 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
         """
         if self._template:
             template_vars = notification.to_dict()
+            template_vars['alarm_description'] = re.sub(r"\[(.*)\]\((.*)\)", r"<\2|\1>", notification.alarm_description)
             text = self._template.render(**template_vars)
             if not self._template_mime_type or self._template_mime_type == "text/plain":
                 return dict(text=text)
