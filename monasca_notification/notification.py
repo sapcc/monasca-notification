@@ -106,6 +106,8 @@ class Notification(object):
                     old.add(v)
                 else:
                     self.dimensions[k] = {old, v}
+        for k, v in self.dimensions.iteritems():
+            self.dimensions[k] = ", ".join(v)
 
         # add additional variables (TODO: add the metric value)
         template_vars = self.dimensions.copy()
