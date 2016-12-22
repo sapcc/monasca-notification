@@ -83,6 +83,11 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
 
         parsed_url = urlparse.urlsplit(address)
         query_params = urlparse.parse_qs(parsed_url.query)
+
+        # extract channel parameter and map it to JSON
+        if 'channel' in query_params:
+            slack_message['channel'] = query_params.pop('channel').replace('%23', '#')
+
         # URL without query params
         url = urlparse.urljoin(address, urlparse.urlparse(address).path)
 
