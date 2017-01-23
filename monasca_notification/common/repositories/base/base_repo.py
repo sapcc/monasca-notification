@@ -10,6 +10,11 @@
 # is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 # or implied. See the License for the specific language governing permissions and limitations under
 # the License.
+from monasca_notification.monitoring import client
+from monasca_notification.monitoring.metrics import CONFIGDB_ERRORS
+
+STATSD_CLIENT = client.get_client()
+STATSD_TIMER = STATSD_CLIENT.get_timer()
 
 
 class BaseRepo(object):
@@ -26,3 +31,5 @@ class BaseRepo(object):
         self._get_notification_sql = """SELECT name, type, address, period
                                         FROM notification_method
                                         WHERE id = %s"""
+        self._statsd_configdb_error_count = STATSD_CLIENT.get_counter(CONFIGDB_ERRORS)
+

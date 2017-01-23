@@ -16,4 +16,16 @@ KAFKA_CONSUMER_ERRORS = 'kafka.consumer_errors'
 """ errors occured when fetching messages from Kafka (incl. ZK) """
 KAFKA_PRODUCER_ERRORS = "kafka.producer_errors"
 """ errors when publishing a message or message batch to Kafka """
-ALARMS_FINISHED_COUNT = 'notification.alarms_finished_count'
+ALARMS_FINISHED_COUNT = 'notification.alarms_processed'
+""" number of processed alarms """
+NOTIFICATION_SENT_COUNT = 'notification.notifications_sent'
+""" number of sent notifications """
+NOTIFICATION_SEND_ERROR_COUNT = 'notification.notification_send_errors'
+""" number of notification send errors """
+NOTIFICATION_SEND_TIMER = 'notification.notification_send_time'
+""" number of notification send timing """
+
+CONFIGDB_ERRORS = "config_db_errors"
+""" errors when accessing the configuration DB (e.g. MySQL) """
+CONFIGDB_TIME = "config_db_time"
+""" time needed to access the configuration DB (e.g. MySQL) """

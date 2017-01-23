@@ -22,19 +22,16 @@ from jinja2 import Template
 @six.add_metaclass(abc.ABCMeta)
 class AbstractNotifier(object):
 
-    def __init__(self):
+    def __init__(self, type):
         self._config = None
+        self._type = type
         self._template_text = None
         self._template_mime_type = None
         self._template = None
 
-    @abc.abstractproperty
+    @property
     def type(self):
-        pass
-
-    @abc.abstractproperty
-    def statsd_name(self):
-        pass
+        return self._type
 
     def config(self, config_dict):
         self._config = {'timeout': 5}

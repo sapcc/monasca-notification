@@ -18,6 +18,8 @@ import urlparse
 
 import requests
 
+from monasca_notification.monitoring import client
+from monasca_notification.monitoring.metrics import NOTIFICATION_SEND_TIMER
 from monasca_notification.plugins import abstract_notifier
 
 """
@@ -37,19 +39,14 @@ from monasca_notification.plugins import abstract_notifier
 
 """
 
+STATSD_CLIENT = client.get_client()
+STATSD_TIMER = STATSD_CLIENT.get_timer()
+
 
 class HipChatNotifier(abstract_notifier.AbstractNotifier):
     def __init__(self, log):
-        super(HipChatNotifier, self).__init__()
+        super(HipChatNotifier, self).__init__("hipchat")
         self._log = log
-
-    @property
-    def type(self):
-        return "hipchat"
-
-    @property
-    def statsd_name(self):
-        return 'sent_hipchat_count'
 
     def _build_hipchat_message(self, notification):
         """Builds hipchat message body
@@ -72,6 +69,7 @@ class HipChatNotifier(abstract_notifier.AbstractNotifier):
 
         return hipchat_request
 
+    @STATSD_TIMER.timed(NOTIFICATION_SEND_TIMER, dimensions={'notification_type': 'hipchat'})
     def send_notification(self, notification):
         """Send the notification via hipchat
             Posts on the given url

@@ -20,6 +20,8 @@ import jira
 import yaml
 from jinja2 import Template
 
+from monasca_notification.monitoring import client
+from monasca_notification.monitoring.metrics import NOTIFICATION_SEND_TIMER
 from monasca_notification.plugins.abstract_notifier import AbstractNotifier
 
 """
@@ -51,13 +53,16 @@ from monasca_notification.plugins.abstract_notifier import AbstractNotifier
 
 """
 
+STATSD_CLIENT = client.get_client()
+STATSD_TIMER = STATSD_CLIENT.get_timer()
+
 
 class JiraNotifier(AbstractNotifier):
 
     _search_query = search_query = "project={} and reporter='{}' and summary ~ '{}'"
 
     def __init__(self, log):
-        super(JiraNotifier, self).__init__()
+        super(JiraNotifier, self).__init__("jira")
         self._log = log
         self.jira_fields_format = None
 
@@ -69,14 +74,6 @@ class JiraNotifier(AbstractNotifier):
             raise Exception(message)
 
         self.jira_fields_format = self._get_jira_custom_format_fields()
-
-    @property
-    def type(self):
-        return "jira"
-
-    @property
-    def statsd_name(self):
-        return 'jira_notifier'
 
     def _get_jira_custom_format_fields(self):
         jira_fields_format = None
@@ -144,6 +141,7 @@ class JiraNotifier(AbstractNotifier):
 
         return self._build_default_jira_message(notification)
 
+    @STATSD_TIMER.timed(NOTIFICATION_SEND_TIMER, dimensions={'notification_type': 'pagerduty'})
     def send_notification(self, notification):
         """Creates or Updates an issue in Jira
         """

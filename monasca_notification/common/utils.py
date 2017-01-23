@@ -74,17 +74,3 @@ def grab_stored_notification_method(db_repo, notification_id):
             stored_notification = db_repo.get_notification(notification_id)
 
         return stored_notification
-
-
-def get_statsd_client(config, dimensions=None):
-    local_dims = dimensions.copy() if dimensions else {}
-    local_dims.update(NOTIFICATION_DIMENSIONS)
-    if 'statsd' in config:
-        client = monascastatsd.Client(name='monasca.notification',
-                                      host=config['statsd'].get('host', 'localhost'),
-                                      port=config['statsd'].get('port', 8125),
-                                      dimensions=local_dims)
-    else:
-        client = monascastatsd.Client(name='monasca.notification',
-                                      dimensions=local_dims)
-    return client

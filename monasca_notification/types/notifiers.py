@@ -18,6 +18,8 @@ import time
 
 from monasca_common.simport import simport
 
+from monasca_notification.monitoring import client
+from monasca_notification.monitoring.metrics import NOTIFICATION_SENT_COUNT, NOTIFICATION_SEND_ERROR_COUNT
 from monasca_notification.plugins import email_notifier
 from monasca_notification.plugins import pagerduty_notifier
 from monasca_notification.plugins import webhook_notifier
@@ -26,17 +28,13 @@ log = logging.getLogger(__name__)
 
 possible_notifiers = []
 configured_notifiers = {}
-statsd_counter = {}
 
-statsd = None
-statsd_timer = None
+STATSD_CLIENT = client.get_client()
+statsd_sent_count = STATSD_CLIENT.get_counter(NOTIFICATION_SENT_COUNT)
+statsd_send_error_count = STATSD_CLIENT.get_counter(NOTIFICATION_SEND_ERROR_COUNT)
 
 
-def init(statsd_obj):
-    global statsd, statsd_timer
-    statsd = statsd_obj
-    statsd_timer = statsd.get_timer()
-
+def init():
     possible_notifiers.append(email_notifier.EmailNotifier(log))
     possible_notifiers.append(webhook_notifier.WebhookNotifier(log))
     possible_notifiers.append(pagerduty_notifier.PagerdutyNotifier(log))
@@ -65,7 +63,6 @@ def config(config):
             try:
                 notifier.config(formatted_config[ntype])
                 configured_notifiers[ntype] = notifier
-                statsd_counter[ntype] = statsd.get_counter(notifier.statsd_name)
                 log.info("{} notification ready".format(ntype))
             except Exception:
                 log.exception("config exception for {}".format(ntype))
@@ -90,14 +87,17 @@ def send_notifications(notifications):
 
         notification.notification_timestamp = time.time()
 
-        with statsd_timer.time(ntype + '_time'):
-            result = send_single_notification(notification)
+        result = send_single_notification(notification)
 
         if result:
             sent.append(notification)
-            statsd_counter[ntype].increment(1)
+            statsd_sent_count.increment(1, dimensions={'notification_type': ntype})
         else:
             failed.append(notification)
+            statsd_send_error_count.increment(1, dimensions={'notification_type': ntype})
+
+    if len(invalid) > 0:
+        statsd_send_error_count.increment(len(invalid), dimensions={'notification_type': 'INVALID'})
 
     return sent, failed, invalid
 

@@ -17,21 +17,20 @@ import json
 
 import requests
 
+from monasca_notification.monitoring import client
+from monasca_notification.monitoring.metrics import NOTIFICATION_SEND_TIMER
 from monasca_notification.plugins import abstract_notifier
+
+STATSD_CLIENT = client.get_client()
+STATSD_TIMER = STATSD_CLIENT.get_timer()
 
 
 class WebhookNotifier(abstract_notifier.AbstractNotifier):
     def __init__(self, log):
+        super(WebhookNotifier, self).__init__("webhook")
         self._log = log
 
-    @property
-    def type(self):
-        return "webhook"
-
-    @property
-    def statsd_name(self):
-        return 'sent_webhook_count'
-
+    @STATSD_TIMER.timed(NOTIFICATION_SEND_TIMER, dimensions={'notification_type': 'webhook'})
     def send_notification(self, notification):
         """Send the notification via webhook
             Posts on the given url

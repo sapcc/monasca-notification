@@ -19,6 +19,8 @@ import urlparse
 
 import requests
 
+from monasca_notification.monitoring import client
+from monasca_notification.monitoring.metrics import NOTIFICATION_SEND_TIMER
 from monasca_notification.plugins import abstract_notifier
 
 """
@@ -31,22 +33,17 @@ from monasca_notification.plugins import abstract_notifier
 
 """
 
+STATSD_CLIENT = client.get_client()
+STATSD_TIMER = STATSD_CLIENT.get_timer()
+
 
 class SlackNotifier(abstract_notifier.AbstractNotifier):
     def __init__(self, log):
-        super(SlackNotifier, self).__init__()
+        super(SlackNotifier, self).__init__("slack")
         self._log = log
 
     def config(self, config_dict):
         super(SlackNotifier, self).config(config_dict)
-
-    @property
-    def type(self):
-        return "slack"
-
-    @property
-    def statsd_name(self):
-        return 'sent_slack_count'
 
     def _build_slack_message(self, notification):
         """Builds slack message body
@@ -69,6 +66,7 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
 
         return dict(text='{} - {}: {}'.format(notification.state, notification.alarm_description, notification.message))
 
+    @STATSD_TIMER.timed(NOTIFICATION_SEND_TIMER, dimensions={'notification_type': 'slack'})
     def send_notification(self, notification):
         """Send the notification via slack
             Posts on the given url

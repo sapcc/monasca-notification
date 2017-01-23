@@ -17,6 +17,8 @@ import email.mime.text
 import smtplib
 import time
 
+from monasca_notification.monitoring import client
+from monasca_notification.monitoring.metrics import NOTIFICATION_SEND_TIMER
 from monasca_notification.plugins import abstract_notifier
 
 EMAIL_SINGLE_HOST_BASE = u'''On host "{hostname}" for target "{target_host}" {message}
@@ -49,10 +51,13 @@ Link: {link}
 With dimensions
 {metric_dimensions}'''
 
+STATSD_CLIENT = client.get_client()
+STATSD_TIMER = STATSD_CLIENT.get_timer()
+
 
 class EmailNotifier(abstract_notifier.AbstractNotifier):
     def __init__(self, log):
-        super(EmailNotifier, self).__init__()
+        super(EmailNotifier, self).__init__("email")
         self._log = log
         self._smtp = None
 
@@ -60,14 +65,7 @@ class EmailNotifier(abstract_notifier.AbstractNotifier):
         self._config = config
         self._smtp_connect()
 
-    @property
-    def type(self):
-        return "email"
-
-    @property
-    def statsd_name(self):
-        return "sent_smtp_count"
-
+    @STATSD_TIMER.timed(NOTIFICATION_SEND_TIMER, dimensions={'notification_type': 'email'})
     def send_notification(self, notification):
         """Send the notification via email
              Returns the True upon success, False upon failure

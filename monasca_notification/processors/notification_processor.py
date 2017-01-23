@@ -16,7 +16,6 @@
 import logging
 
 from monasca_notification.common.utils import get_db_repo
-from monasca_notification.common.utils import get_statsd_client
 from monasca_notification.types import notifiers
 
 log = logging.getLogger(__name__)
@@ -25,14 +24,10 @@ log = logging.getLogger(__name__)
 class NotificationProcessor(object):
 
     def __init__(self, config):
-        self.statsd = get_statsd_client(config)
-        notifiers.init(self.statsd)
         notifiers.load_plugins(config['notification_types'])
         notifiers.config(config['notification_types'])
         self._db_repo = get_db_repo(config)
         self.insert_configured_plugins()
-        self._invalid_type_count = self.statsd.get_counter(name='invalid_type_count')
-        self._sent_failed_count = self.statsd.get_counter(name='sent_failed_count')
 
     def insert_configured_plugins(self):
         """Persists configured plugin types in DB
@@ -55,11 +50,5 @@ class NotificationProcessor(object):
         """
 
         sent, failed, invalid = notifiers.send_notifications(notifications)
-
-        for notif in failed:
-            self._sent_failed_count.increment(1, dimensions={'notification_type': notif.type})
-
-        for notif in invalid:
-            self._invalid_type_count.increment(1, dimensions={'notification_type': notif.type})
 
         return sent, failed

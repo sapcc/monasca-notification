@@ -19,17 +19,21 @@ import time
 
 from monasca_notification.common.repositories import exceptions as exc
 from monasca_notification.common.utils import get_db_repo
-from monasca_notification.common.utils import get_statsd_client
 from monasca_notification import notification
 from monasca_notification import notification_exceptions
+from monasca_notification.monitoring import client
+from monasca_notification.monitoring.metrics import CONFIGDB_TIME
 
 log = logging.getLogger(__name__)
+
+STATSD_CLIENT = client.get_client()
+STATSD_TIMER = STATSD_CLIENT.get_timer()
+no_notification_count = STATSD_CLIENT.get_counter(name='notification.alarms_no_notification')
 
 
 class AlarmProcessor(object):
     def __init__(self, alarm_ttl, config):
         self._alarm_ttl = alarm_ttl
-        self._statsd = get_statsd_client(config)
         self._db_repo = get_db_repo(config)
 
     @staticmethod
@@ -76,11 +80,9 @@ class AlarmProcessor(object):
 
         return True
 
+    @STATSD_TIMER.timed(CONFIGDB_TIME, sample_rate=1)
     def _build_notification(self, alarm):
-        db_time = self._statsd.get_timer()
-
-        with db_time.time('config_db_time'):
-            alarms_actions = self._db_repo.fetch_notifications(alarm)
+        alarms_actions = self._db_repo.fetch_notifications(alarm)
 
         return [notification.Notification(
                 alarms_action[0],
@@ -94,16 +96,13 @@ class AlarmProcessor(object):
     def to_notification(self, raw_alarm):
         """Check the notification setting for this project then create the appropriate notification
         """
-        failed_parse_count = self._statsd.get_counter(name='alarms_failed_parse_count')
-        no_notification_count = self._statsd.get_counter(name='alarms_no_notification_count')
-        notification_count = self._statsd.get_counter(name='created_count')
+        global no_notification_count
 
         partition = raw_alarm[0]
         offset = raw_alarm[1].offset
         try:
             alarm = self._parse_alarm(raw_alarm[1].message.value)
         except Exception as e:  # This is general because of a lack of json exception base class
-            failed_parse_count += 1
             log.exception("Invalid Alarm format skipping partition %d, offset %d\nError%s" % (partition, offset, e))
             return [], partition, offset
 
@@ -127,5 +126,4 @@ class AlarmProcessor(object):
             return [], partition, offset
         else:
             log.debug('Found %d notifications: [%s]', len(notifications), notifications)
-            notification_count += len(notifications)
             return notifications, partition, offset

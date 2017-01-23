@@ -17,28 +17,25 @@ import json
 
 import requests
 
+from monasca_notification.monitoring import client
+from monasca_notification.monitoring.metrics import NOTIFICATION_SEND_TIMER
 from monasca_notification.plugins import abstract_notifier
 
 VALID_HTTP_CODES = [200, 201, 204]
+STATSD_CLIENT = client.get_client()
+STATSD_TIMER = STATSD_CLIENT.get_timer()
 
 
 class PagerdutyNotifier(abstract_notifier.AbstractNotifier):
     def __init__(self, log):
-        super(PagerdutyNotifier, self).__init__()
+        super(PagerdutyNotifier, self).__init__("pagerduty")
         self._log = log
 
     def config(self, config_dict):
         super(PagerdutyNotifier, self).config(config_dict)
         self._config['url'] = 'https://events.pagerduty.com/generic/2010-04-15/create_event.json'
 
-    @property
-    def type(self):
-        return "pagerduty"
-
-    @property
-    def statsd_name(self):
-        return 'sent_pagerduty_count'
-
+    @STATSD_TIMER.timed(NOTIFICATION_SEND_TIMER, dimensions={'notification_type': 'pagerduty'})
     def send_notification(self, notification):
         """Send pagerduty notification
         """
