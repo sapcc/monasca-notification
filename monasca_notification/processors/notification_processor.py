@@ -24,6 +24,7 @@ log = logging.getLogger(__name__)
 class NotificationProcessor(object):
 
     def __init__(self, config):
+        notifiers.init()
         notifiers.load_plugins(config['notification_types'])
         notifiers.config(config['notification_types'])
         self._db_repo = get_db_repo(config)

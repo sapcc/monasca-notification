@@ -31,6 +31,7 @@ def alarm(metrics):
     return {"tenantId": "0",
             "alarmId": "0",
             "alarmName": u"test Alarm " + UNICODE_CHAR,
+            "alarmDescription": "test alarm description",
             "oldState": "OK",
             "newState": "ALARM",
             "severity": "LOW",

@@ -27,6 +27,7 @@ def alarm(metrics):
     return {"tenantId": "0",
             "alarmId": "0",
             "alarmName": "test Alarm",
+            "alarmDescription": "test alarm description",
             "oldState": "OK",
             "newState": "ALARM",
             "severity": "LOW",
@@ -148,7 +149,7 @@ class TestInterface(unittest.TestCase):
                        'webhook': {'address': 'xyz.com'},
                        'pagerduty': {'address': 'xyz.com'}}
 
-        notifiers.init(self.statsd)
+        notifiers.init()
         notifiers.config(config_dict)
         notifications = notifiers.enabled_notifications()
 
@@ -166,7 +167,7 @@ class TestInterface(unittest.TestCase):
         config_dict = {'email': self.email_config,
                        'webhook': {'address': 'xyz.com'}}
 
-        notifiers.init(self.statsd)
+        notifiers.init()
         notifiers.config(config_dict)
 
         self.assertIn("No config data for type: pagerduty", self.trap)
@@ -185,7 +186,7 @@ class TestInterface(unittest.TestCase):
                        'webhook': {'address': 'xyz.com'},
                        'pagerduty': {'address': 'abc'}}
 
-        notifiers.init(self.statsd)
+        notifiers.init()
         notifiers.config(config_dict)
 
         self.assertIn("config exception for email", self.trap)
@@ -201,7 +202,7 @@ class TestInterface(unittest.TestCase):
                        'webhook': {'address': 'xyz.com'},
                        'pagerduty': {'address': 'abc'}}
 
-        notifiers.init(self.statsd)
+        notifiers.init()
         notifiers.config(config_dict)
 
         self.assertIn("email notification ready", self.trap)
@@ -222,7 +223,7 @@ class TestInterface(unittest.TestCase):
                        'webhook': {'address': 'xyz.com'},
                        'pagerduty': {'address': 'abc'}}
 
-        notifiers.init(self.statsd)
+        notifiers.init()
         notifiers.config(config_dict)
 
         notifications = []
@@ -247,7 +248,7 @@ class TestInterface(unittest.TestCase):
                        'webhook': {'address': 'xyz.com'},
                        'pagerduty': {'address': 'abc'}}
 
-        notifiers.init(self.statsd)
+        notifiers.init()
         notifiers.config(config_dict)
 
         notifications = []
@@ -273,7 +274,7 @@ class TestInterface(unittest.TestCase):
         config_dict = {'email': self.email_config,
                        'webhook': {'address': 'xyz.com'}}
 
-        notifiers.init(self.statsd)
+        notifiers.init()
         notifiers.config(config_dict)
 
         self.assertIn("No config data for type: pagerduty", self.trap)
@@ -307,7 +308,7 @@ class TestInterface(unittest.TestCase):
                        'webhook': {'address': 'xyz.com'},
                        'pagerduty': {'address': 'abc'}}
 
-        notifiers.init(self.statsd)
+        notifiers.init()
         notifiers.config(config_dict)
 
         notifications = []
@@ -327,41 +328,41 @@ class TestInterface(unittest.TestCase):
         for n in sent:
             self.assertEqual(n.notification_timestamp, 42)
 
-    @mock.patch('monasca_notification.types.notifiers.email_notifier')
-    @mock.patch('monasca_notification.types.notifiers.email_notifier.smtplib')
-    @mock.patch('monasca_notification.types.notifiers.log')
-    def test_statsd(self, mock_log, mock_smtp, mock_email):
-        mock_log.warn = self.trap.append
-        mock_log.error = self.trap.append
-
-        mock_email.EmailNotifier = self._goodSendStub
-
-        config_dict = {'email': self.email_config,
-                       'webhook': {'address': 'xyz.com'},
-                       'pagerduty': {'address': 'abc'}}
-
-        notifiers.init(self.statsd)
-        notifiers.config(config_dict)
-
-        notifications = []
-        notifications.append(m_notification.Notification(0, 'email', 'email notification',
-                                                         'me@here.com', 0, 0, alarm({})))
-        notifications.append(m_notification.Notification(1, 'email', 'email notification',
-                                                         'foo@here.com', 0, 0, alarm({})))
-        notifications.append(m_notification.Notification(2, 'email', 'email notification',
-                                                         'bar@here.com', 0, 0, alarm({})))
-
-        notifiers.send_notifications(notifications)
-
-        self.assertEqual(self.statsd.timer.timer_calls['email_time_start'], 3)
-        self.assertEqual(self.statsd.timer.timer_calls['email_time_stop'], 3)
-        self.assertEqual(self.statsd.counter.counter, 3)
+    # @mock.patch('monasca_notification.types.notifiers.email_notifier')
+    # @mock.patch('monasca_notification.types.notifiers.email_notifier.smtplib')
+    # @mock.patch('monasca_notification.types.notifiers.log')
+    # def test_statsd(self, mock_log, mock_smtp, mock_email):
+    #     mock_log.warn = self.trap.append
+    #     mock_log.error = self.trap.append
+    #
+    #     mock_email.EmailNotifier = self._goodSendStub
+    #
+    #     config_dict = {'email': self.email_config,
+    #                    'webhook': {'address': 'xyz.com'},
+    #                    'pagerduty': {'address': 'abc'}}
+    #
+    #     notifiers.init()
+    #     notifiers.config(config_dict)
+    #
+    #     notifications = []
+    #     notifications.append(m_notification.Notification(0, 'email', 'email notification',
+    #                                                      'me@here.com', 0, 0, alarm({})))
+    #     notifications.append(m_notification.Notification(1, 'email', 'email notification',
+    #                                                      'foo@here.com', 0, 0, alarm({})))
+    #     notifications.append(m_notification.Notification(2, 'email', 'email notification',
+    #                                                      'bar@here.com', 0, 0, alarm({})))
+    #
+    #     notifiers.send_notifications(notifications)
+    #
+    #     self.assertEqual(self.statsd.timer.timer_calls['email_time_start'], 3)
+    #     self.assertEqual(self.statsd.timer.timer_calls['email_time_stop'], 3)
+    #     self.assertEqual(self.statsd.counter.counter, 3)
 
     def test_plugin_load(self):
         config_dict = {"plugins": ["monasca_notification.plugins.hipchat_notifier:HipChatNotifier",
                                    "monasca_notification.plugins.slack_notifier:SlackNotifier"]}
 
-        notifiers.init(self.statsd)
+        notifiers.init()
         notifiers.load_plugins(config_dict)
         self.assertEqual(len(notifiers.possible_notifiers), 5)
 
@@ -375,7 +376,7 @@ class TestInterface(unittest.TestCase):
         config_dict = {"plugins": ["monasca_notification.plugins.hipchat_notifier:UnknownPlugin",
                                    "monasca_notification.plugins.slack_notifier:SlackNotifier"]}
 
-        notifiers.init(self.statsd)
+        notifiers.init()
         notifiers.load_plugins(config_dict)
         self.assertEqual(len(notifiers.possible_notifiers), 4)
         self.assertEqual(len(self.trap), 1)

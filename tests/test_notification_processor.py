@@ -93,6 +93,7 @@ class TestNotificationProcessor(unittest.TestCase):
         alarm_dict = {"tenantId": "0",
                       "alarmId": "0",
                       "alarmName": "test Alarm",
+                      "alarmDescription": "test alarm description",
                       "oldState": "OK",
                       "newState": "ALARM",
                       "severity": "LOW",
@@ -114,6 +115,7 @@ class TestNotificationProcessor(unittest.TestCase):
         """Verify invalid notification type is rejected.
         """
         alarm_dict = {"tenantId": "0", "alarmId": "0", "alarmName": "test Alarm", "oldState": "OK", "newState": "ALARM",
+                      "alarmDescription": "test alarm description",
                       "stateChangeReason": "I am alarming!", "timestamp": time.time(), "metrics": "cpu_util",
                       "severity": "LOW", "link": "http://some-place.com", "lifecycleState": "OPEN"}
         invalid_notification = m_notification.Notification(0, 'invalid', 'test notification',

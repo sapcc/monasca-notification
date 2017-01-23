@@ -86,6 +86,7 @@ class TestAlarmProcessor(unittest.TestCase):
         """Should cause the alarm_ttl to fire log a warning and push to finished queue."""
         timestamp = 1375346830042
         alarm_dict = {"tenantId": "0", "alarmDefinitionId": "0", "alarmId": "1", "alarmName": "test Alarm",
+                      "alarmDescription": "test alarm description",
                       "oldState": "OK", "newState": "ALARM", "stateChangeReason": "I am alarming!",
                       "timestamp": timestamp, "actionsEnabled": 1, "metrics": "cpu_util",
                       "severity": "LOW", "link": "http://some-place.com", "lifecycleState": "OPEN"}
@@ -122,6 +123,7 @@ class TestAlarmProcessor(unittest.TestCase):
         """Test a valid notification, being put onto the notification_queue
         """
         alarm_dict = {"tenantId": "0", "alarmDefinitionId": "0", "alarmId": "1", "alarmName": "test Alarm",
+                      "alarmDescription": "test alarm description",
                       "oldState": "OK", "newState": "ALARM", "stateChangeReason": "I am alarming!",
                       "timestamp": time.time() * 1000, "actionsEnabled": 1, "metrics": "cpu_util",
                       "severity": "LOW", "link": "http://some-place.com", "lifecycleState": "OPEN"}
@@ -139,6 +141,7 @@ class TestAlarmProcessor(unittest.TestCase):
 
     def test_two_valid_notifications(self):
         alarm_dict = {"tenantId": "0", "alarmDefinitionId": "0", "alarmId": "1", "alarmName": "test Alarm",
+                      "alarmDescription": "test alarm description",
                       "oldState": "OK", "newState": "ALARM", "stateChangeReason": "I am alarming!",
                       "timestamp": time.time() * 1000, "actionsEnabled": 1, "metrics": "cpu_util",
                       "severity": "LOW", "link": "http://some-place.com", "lifecycleState": "OPEN"}

@@ -26,6 +26,7 @@ def test_json():
     ts = 1429029121239
     alarm = {'alarmId': 'alarmId',
              'alarmName': 'alarmName',
+             "alarmDescription": "test alarm description",
              'timestamp': ts,
              'stateChangeReason': 'stateChangeReason',
              'newState': 'newState',

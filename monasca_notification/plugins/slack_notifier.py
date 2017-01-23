@@ -42,9 +42,6 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
         super(SlackNotifier, self).__init__("slack")
         self._log = log
 
-    def config(self, config_dict):
-        super(SlackNotifier, self).config(config_dict)
-
     def _build_slack_message(self, notification):
         """Builds slack message body
         """
