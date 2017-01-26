@@ -25,7 +25,7 @@ NOTIFICATION_SEND_ERROR_COUNT = 'notification.notification_send_errors'
 NOTIFICATION_SEND_TIMER = 'notification.notification_send_time'
 """ number of notification send timing """
 
-CONFIGDB_ERRORS = "config_db_errors"
+CONFIGDB_ERRORS = "configdb.access_errors"
 """ errors when accessing the configuration DB (e.g. MySQL) """
-CONFIGDB_TIME = "config_db_time"
+CONFIGDB_TIME = "configdb.access_time"
 """ time needed to access the configuration DB (e.g. MySQL) """
