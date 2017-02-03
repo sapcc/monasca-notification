@@ -19,6 +19,8 @@ from sqlalchemy.sql import select, bindparam, and_
 
 from monasca_notification.common.repositories import exceptions as exc
 from monasca_notification.common.repositories.orm import models
+from monasca_notification.monitoring import client
+from monasca_notification.monitoring.metrics import CONFIGDB_ERRORS
 
 log = logging.getLogger(__name__)
 
@@ -48,6 +50,7 @@ class OrmRepo(object):
             .where(nm.c.id == bindparam('notification_id'))
 
         self._orm = None
+        self._statsd_configdb_error_count = client.get_client().get_counter(CONFIGDB_ERRORS)
 
     def fetch_notifications(self, alarm):
         try:
@@ -60,6 +63,7 @@ class OrmRepo(object):
                 return [(row[0], row[1].lower(), row[2], row[3], row[4]) for row in notifications]
         except DatabaseError as e:
             log.exception("Couldn't fetch alarms actions %s", e)
+            self._statsd_configdb_error_count.increment()
             raise exc.DatabaseException(e)
 
     def get_alarm_current_state(self, alarm_id):
@@ -73,6 +77,7 @@ class OrmRepo(object):
                 return state
         except DatabaseError as e:
             log.exception("Couldn't fetch the current alarm state %s", e)
+            self._statsd_configdb_error_count.increment()
             raise exc.DatabaseException(e)
 
     def fetch_notification_method_types(self):
@@ -84,6 +89,7 @@ class OrmRepo(object):
                 return [row[0] for row in notification_method_types]
         except DatabaseError as e:
             log.exception("Couldn't fetch notification method types %s", e)
+            self._statsd_configdb_error_count.increment()
             raise exc.DatabaseException(e)
 
     def insert_notification_method_types(self, notification_types):
@@ -94,6 +100,7 @@ class OrmRepo(object):
 
         except DatabaseError as e:
             log.exception("Couldn't insert notification types %s", e)
+            self._statsd_configdb_error_count.increment()
             raise exc.DatabaseException(e)
 
     def get_notification(self, notification_id):
@@ -109,4 +116,5 @@ class OrmRepo(object):
                     return [notification[0], notification[1].lower(), notification[2], notification[3]]
         except DatabaseError as e:
             log.exception("Couldn't fetch the notification method %s", e)
+            self._statsd_configdb_error_count.increment()
             raise exc.DatabaseException(e)

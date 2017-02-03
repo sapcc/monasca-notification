@@ -34,6 +34,7 @@ class PostgresqlRepo(base_repo.BaseRepo):
             self._pgsql.autocommit = True
         except psycopg2.Error as e:
             log.exception('Pgsql connect failed %s', e)
+            self._statsd_configdb_error_count.increment()
             raise
 
     def fetch_notifications(self, alarm):
@@ -46,6 +47,7 @@ class PostgresqlRepo(base_repo.BaseRepo):
                 yield (row[0], row[1].lower(), row[2], row[3], row[4])
         except psycopg2.Error as e:
             log.exception("Couldn't fetch alarms actions %s", e)
+            self._statsd_configdb_error_count.increment()
             raise exc.DatabaseException(e)
 
     def get_alarm_current_state(self, alarm_id):
@@ -59,6 +61,7 @@ class PostgresqlRepo(base_repo.BaseRepo):
             return state
         except psycopg2.Error as e:
             log.exception("Couldn't fetch current alarm state %s", e)
+            self._statsd_configdb_error_count.increment()
             raise exc.DatabaseException(e)
 
     def fetch_notification_method_types(self):
@@ -71,6 +74,7 @@ class PostgresqlRepo(base_repo.BaseRepo):
                 yield (row[0])
         except psycopg2.Error as e:
             log.exception("Couldn't fetch notification types %s", e)
+            self._statsd_configdb_error_count.increment()
             raise exc.DatabaseException(e)
 
     def insert_notification_method_types(self, notification_types):
@@ -81,6 +85,7 @@ class PostgresqlRepo(base_repo.BaseRepo):
             cur.executemany(self._insert_notification_types_sql, notification_types)
         except psycopg2.Error as e:
             log.exception("Couldn't insert notification types %s", e)
+            self._statsd_configdb_error_count.increment()
             raise exc.DatabaseException(e)
 
     def get_notification(self, notification_id):
@@ -96,4 +101,5 @@ class PostgresqlRepo(base_repo.BaseRepo):
                 return [row[0], row[1].lower(), row[2], row[3]]
         except psycopg2.Error as e:
             log.exception("Couldn't fetch the notification method %s", e)
+            self._statsd_configdb_error_count.increment()
             raise exc.DatabaseException(e)

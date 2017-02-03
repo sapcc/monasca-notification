@@ -13,9 +13,6 @@
 from monasca_notification.monitoring import client
 from monasca_notification.monitoring.metrics import CONFIGDB_ERRORS
 
-STATSD_CLIENT = client.get_client()
-STATSD_TIMER = STATSD_CLIENT.get_timer()
-
 
 class BaseRepo(object):
     def __init__(self, config):
@@ -31,5 +28,5 @@ class BaseRepo(object):
         self._get_notification_sql = """SELECT name, type, address, period
                                         FROM notification_method
                                         WHERE id = %s"""
-        self._statsd_configdb_error_count = STATSD_CLIENT.get_counter(CONFIGDB_ERRORS)
+        self._statsd_configdb_error_count = client.get_client().get_counter(CONFIGDB_ERRORS)
 

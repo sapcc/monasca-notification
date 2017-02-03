@@ -58,6 +58,7 @@ class MysqlRepo(base_repo.BaseRepo):
             self._mysql.autocommit(True)
         except pymysql.Error as e:
             log.exception('MySQL connect failed %s', e)
+            self._statsd_configdb_error_count.increment()
             raise
 
     def fetch_notifications(self, alarm):
@@ -72,6 +73,7 @@ class MysqlRepo(base_repo.BaseRepo):
         except pymysql.Error as e:
             self._mysql = None
             log.exception("Couldn't fetch alarms actions %s", e)
+            self._statsd_configdb_error_count.increment()
             raise exc.DatabaseException(e)
 
     def get_alarm_current_state(self, alarm_id):
@@ -86,6 +88,7 @@ class MysqlRepo(base_repo.BaseRepo):
         except pymysql.Error as e:
             self._mysql = None
             log.exception("Couldn't fetch the current alarm state %s", e)
+            self._statsd_configdb_error_count.increment()
             raise exc.DatabaseException(e)
 
     def fetch_notification_method_types(self):
@@ -100,6 +103,7 @@ class MysqlRepo(base_repo.BaseRepo):
         except pymysql.Error as e:
             self._mysql = None
             log.exception("Couldn't fetch notification types %s", e)
+            self._statsd_configdb_error_count.increment()
             raise exc.DatabaseException(e)
 
     def insert_notification_method_types(self, notification_types):
@@ -122,6 +126,7 @@ class MysqlRepo(base_repo.BaseRepo):
         except pymysql.Error as e:
             self._mysql = None
             log.exception("Couldn't insert notification types %s", e)
+            self._statsd_configdb_error_count.increment()
             raise exc.DatabaseException(e)
 
     def get_notification(self, notification_id):
@@ -138,4 +143,5 @@ class MysqlRepo(base_repo.BaseRepo):
         except pymysql.Error as e:
             self._mysql = None
             log.exception("Couldn't fetch the notification method %s", e)
+            self._statsd_configdb_error_count.increment()
             raise exc.DatabaseException(e)
