@@ -5,9 +5,9 @@ oslo.log>=3.11.0
 
 pbr>=1.8 # Apache-2.0
 monasca-statsd>=1.1.0 # Apache-2.0
-requests>=2.10.0 # Apache-2.0
+requests!=2.12.2,>=2.10.0 # Apache-2.0
 PyYAML>=3.10.0 # MIT
 six>=1.9.0 # MIT
-monasca-common>=1.0.0 # Apache-2.0
 
 jinja2
+monasca-common>=1.4.0 # Apache-2.0

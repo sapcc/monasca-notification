@@ -1,4 +1,4 @@
-# (C) Copyright 2014-2016 Hewlett Packard Enterprise Development Company LP
+# (C) Copyright 2014-2017 Hewlett Packard Enterprise Development LP
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ exiting = False
 
 
 def clean_exit(signum, frame=None):
-    """Exit all processes attempting to finish uncommited active work before exit.
+    """Exit all processes attempting to finish uncommitted active work before exit.
          Can be called on an os signal or no zookeeper losing connection.
     """
     global exiting
@@ -57,7 +57,9 @@ def clean_exit(signum, frame=None):
             if process.is_alive():
                 process.terminate()  # Sends sigterm which any processes after a notification is sent attempt to handle
                 wait_for_exit = True
-        except Exception:
+        except Exception:  # nosec
+            # There is really nothing to do if the kill fails, so just go on.
+            # The # nosec keeps bandit from reporting this as a security issue
             pass
 
     # wait for a couple seconds to give the subprocesses a chance to shut down correctly.
@@ -69,7 +71,9 @@ def clean_exit(signum, frame=None):
         log.debug('Killing pid %s' % child.pid)
         try:
             os.kill(child.pid, signal.SIGKILL)
-        except Exception:
+        except Exception:  # nosec
+            # There is really nothing to do if the kill fails, so just go on.
+            # The # nosec keeps bandit from reporting this as a security issue
             pass
 
     if signum == signal.SIGTERM:
@@ -96,7 +100,7 @@ def main(argv=None):
     else:
         config_file = '/etc/monasca/notification.yaml'
 
-    config = yaml.load(open(config_file, 'r'))
+    config = yaml.safe_load(open(config_file, 'r'))
 
     # Setup logging
     logging.config.dictConfig(config['logging'])
