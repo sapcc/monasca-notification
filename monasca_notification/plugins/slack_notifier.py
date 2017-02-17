@@ -47,6 +47,7 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
         """
         if self._template:
             template_vars = notification.to_dict()
+            # replace markdown link syntax with Slack's own one
             template_vars['alarm_description'] = re.sub(r"\[(.*)\]\((.*)\)", r"<\2|\1>", notification.alarm_description)
             text = self._template.render(**template_vars)
             if not self._template_mime_type or self._template_mime_type == "text/plain":
@@ -56,7 +57,7 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
                     return json.loads(text)
                 except ValueError as ex:
                     self._log.exception("Invalid JSON template for Slack plugin")
-                    self._log.error("Rendered template:\n%s", text)
+                    self._log.error("Error loading rendered template JSON: %s\n%s", ex.message, text)
             else:
                 self._log.error('Invalid configuration of Slack plugin. Unsupported template.mime_type: %s',
                                 self._template_mime_type)

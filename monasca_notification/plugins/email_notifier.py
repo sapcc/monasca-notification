@@ -17,6 +17,8 @@ import email.mime.text
 import smtplib
 import time
 
+import re
+
 from monasca_notification.monitoring import client
 from monasca_notification.monitoring.metrics import NOTIFICATION_SEND_TIMER
 from monasca_notification.plugins import abstract_notifier
@@ -53,6 +55,11 @@ With dimensions
 
 STATSD_CLIENT = client.get_client()
 STATSD_TIMER = STATSD_CLIENT.get_timer()
+
+
+def markdown_to_html(alarm_description):
+    # TODO: nathan to add markdown to HTML conversion
+    return alarm_description
 
 
 class EmailNotifier(abstract_notifier.AbstractNotifier):
@@ -147,6 +154,25 @@ class EmailNotifier(abstract_notifier.AbstractNotifier):
         """
         timestamp = time.asctime(time.gmtime(notification.alarm_timestamp))
 
+        if self._template:
+            template_vars = notification.to_dict()
+            if not self._template_mime_type or self._template_mime_type == "text/plain":
+                # replace markdown link syntax in plain text mails
+                template_vars['alarm_description'] = re.sub(r"\[(.*)\]\((.*)\)", r"\1 (\2)",
+                                                            notification.alarm_description)
+            elif self._template_mime_type == "text/html":
+                template_vars['alarm_description'] = markdown_to_html(notification.alarm_description)
+            else:
+                self._log.error('Invalid configuration of E-Mail plugin. Unsupported template.mime_type: %s',
+                                self._template_mime_type)
+
+            try:
+                return self._template.render(**template_vars)
+            except Exception:
+                self._log.exception('Invalid configuration of E-Mail plugin: Malformed template:\n %s',
+                                    self._template_text)
+
+        # fallback to prior behaviour if there is no channel template
         dimensions = _format_dimensions(notification)
 
         if len(hostname) == 1:  # Type 1
