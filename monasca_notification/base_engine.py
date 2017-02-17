@@ -1,5 +1,5 @@
-from kafka import common
 from monasca_common.kafka import consumer, producer
+from monasca_common.kafka_lib.common import KafkaError
 from oslo_log import log as logging
 
 from monasca_notification.monitoring.metrics import KAFKA_CONSUMER_ERRORS, KAFKA_PRODUCER_ERRORS
@@ -29,8 +29,7 @@ class BaseEngine(object):
         try:
             self._producer.publish(topic,
                                    [i.to_json() for i in messages])
-            self._producer_errors.increment(0, sample_rate=0.01, dimensions={'topic': topic})
-        except common.KafkaError:
+        except KafkaError:
             log.exception("Notification encountered Kafka errors while publishing to topic %s", topic)
             self._producer_errors.increment(1, sample_rate=1.0, dimensions={'topic': topic})
             raise
@@ -47,7 +46,7 @@ class BaseEngine(object):
             for message in self._consumer:
                 self.do_message(message)
 
-        except common.KafkaError:
+        except KafkaError:
             log.exception("Notification encountered Kafka errors while reading alarms")
             self._consumer_errors.increment(1)
             raise
