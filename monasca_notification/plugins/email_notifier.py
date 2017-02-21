@@ -16,6 +16,7 @@
 import email.mime.text
 import smtplib
 import time
+import markdown
 
 import re
 
@@ -58,8 +59,8 @@ STATSD_TIMER = STATSD_CLIENT.get_timer()
 
 
 def markdown_to_html(alarm_description):
-    # TODO: nathan to add markdown to HTML conversion
-    return alarm_description
+    html_alarm_descripion = markdown.markdown(alarm_description)
+    return html_alarm_description
 
 
 class EmailNotifier(abstract_notifier.AbstractNotifier):
