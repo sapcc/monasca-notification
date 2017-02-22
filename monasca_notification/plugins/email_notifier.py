@@ -64,7 +64,7 @@ STATSD_TIMER = STATSD_CLIENT.get_timer()
 
 
 def markdown_to_html(alarm_description):
-    html_alarm_descripion = markdown.markdown(alarm_description)
+    html_alarm_description = markdown.markdown(alarm_description)
     return html_alarm_description
 
 
@@ -186,7 +186,7 @@ class EmailNotifier(abstract_notifier.AbstractNotifier):
                                     self._subject_template_text)
                 subject = "{} state changed to {}".format(notification.alarm_name, notification.state)
 
-            _, subtype = self._template_mime_type.split('/', 1)
+            _, subtype = self._template_mime_type.split('/', 1) if self._template_mime_type else 'plain'
             msg = email.mime.text.MIMEText(text.encode('utf-8'), subtype)
             msg['Subject'] = subject.encode("utf-8")
             msg['From'] = self._config['from_addr']
