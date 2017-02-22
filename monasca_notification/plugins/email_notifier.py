@@ -149,7 +149,9 @@ class EmailNotifier(abstract_notifier.AbstractNotifier):
             return False
 
     def _create_msg(self, hostname, notification, targethost=None):
-        """Create two kind of messages:
+        """Create notification messages based on a Jinja2 templates using notification attributes as variables.
+
+        Behaviour without template: Create two kind of messages:
         1. Notifications that include metrics with a hostname as a dimension. There may be more than one hostname.
            We will only report the hostname if there is only one.
         2. Notifications that do not include metrics and therefore no hostname. Example: API initiated changes.
@@ -169,18 +171,8 @@ class EmailNotifier(abstract_notifier.AbstractNotifier):
                 self._log.error('Invalid configuration of E-Mail plugin. Unsupported template.mime_type: %s',
                                 self._template_mime_type)
 
-            try:
-                text = self._template.render(**template_vars)
-            except Exception:
-                text = notification.alarm_description
-
-            try:
-                subject = self._subject_template.render(**template_vars)
-            except Exception:
-                self._log.exception('Invalid configuration of E-Mail plugin: Malformed template:\n %s',
-                                    self._subject_template_text)
-                subject = "{} state changed to {}".format(notification.alarm_name, notification.state)
-
+            text = self._template.render(**template_vars)
+            subject = self._subject_template.render(**template_vars)
             _, subtype = self._template_mime_type.split('/', 1) if self._template_mime_type else 'plain'
             msg = email.mime.text.MIMEText(text.encode('utf-8'), subtype)
             msg['Subject'] = subject.encode("utf-8")
