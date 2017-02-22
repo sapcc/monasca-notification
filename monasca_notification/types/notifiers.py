@@ -68,7 +68,7 @@ def enabled_notifications():
 
 
 def config(cfg):
-    global possible_notifiers, configured_notifiers, statsd_counter
+    global possible_notifiers, configured_notifiers
 
     formatted_config = {t.lower(): v for t, v in six.iteritems(cfg)}
     for notifier in possible_notifiers:

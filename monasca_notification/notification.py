@@ -115,13 +115,13 @@ class Notification(object):
 
         # provide actual metric values leading to the alarm
         self.metric_values = {}
-        for subalarm in alarm['subAlarms'].iteritems():
+        for subalarm in alarm['subAlarms']:
             metric_name = subalarm['subAlarmExpression']['metricDefinition']['name']
             metric_value = subalarm['currentValues']
             if len(metric_value) == 0:
-                self.metric_value[metric_name] = None
+                self.metric_values[metric_name] = None
             elif len(metric_value) == 1:
-                self.metric_value[metric_name] = metric_value[0]
+                self.metric_values[metric_name] = metric_value[0]
             else:
                 self.metric_values[metric_name] = metric_value
 
