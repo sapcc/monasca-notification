@@ -41,6 +41,7 @@ class Notification(object):
         'message',
         'name',
         'notification_timestamp',
+        'old_state',
         'state',
         'severity',
         'link',
@@ -82,6 +83,7 @@ class Notification(object):
         self.alarm_age = time.time() - self.alarm_timestamp
         self.message = alarm['stateChangeReason']
         self.state = alarm['newState']
+        self.old_state = alarm['oldState']
         self.severity = alarm['severity']
         self.link = alarm['link']
         self.lifecycle_state = alarm['lifecycleState']
@@ -110,11 +112,26 @@ class Notification(object):
             if isinstance(v, set):
                 self.dimensions[k] = ", ".join(v)
 
-        # add additional variables (TODO: add the metric value)
-        template_vars = self.dimensions.copy()
+        # provide actual metric values leading to the alarm
+        self.metric_values = {}
+        for subalarm in alarm['subAlarms'].iteritems():
+            metric_name = subalarm['subAlarmExpression']['metricDefinition']['name']
+            metric_value = subalarm['currentValues']
+            if len(metric_value) == 0:
+                self.metric_value[metric_name] = None
+            elif len(metric_value) == 1:
+                self.metric_value[metric_name] = metric_value[0]
+            else:
+                self.metric_values[metric_name] = metric_value
+
+        # add additional variables
+        template_vars = {}
+        template_vars.update(self.dimensions)
+        template_vars.update(self.metric_values)
         template_vars['_age'] = self.alarm_age
         template_vars['_timestamp'] = str(datetime.datetime.utcfromtimestamp(self.alarm_timestamp)).replace(" ", "T") + 'Z'
         template_vars['_state'] = self.state
+        template_vars['_old_state'] = self.old_state
 
         # attempt interpreting description as Jinja2 template
         try:
@@ -157,6 +174,7 @@ class Notification(object):
             'alarm_timestamp',
             'message',
             'notification_timestamp',
+            'old_state',
             'state',
             'severity',
             'link',
