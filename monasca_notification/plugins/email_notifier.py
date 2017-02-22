@@ -63,11 +63,6 @@ STATSD_CLIENT = client.get_client()
 STATSD_TIMER = STATSD_CLIENT.get_timer()
 
 
-def markdown_to_html(alarm_description):
-    html_alarm_description = markdown.markdown(alarm_description)
-    return html_alarm_description
-
-
 class EmailNotifier(abstract_notifier.AbstractNotifier):
     def __init__(self, log):
         super(EmailNotifier, self).__init__("email")
@@ -169,7 +164,7 @@ class EmailNotifier(abstract_notifier.AbstractNotifier):
                 template_vars['alarm_description'] = re.sub(r"\[(.*)\]\((.*)\)", r"\1 (\2)",
                                                             notification.alarm_description)
             elif self._template_mime_type == "text/html":
-                template_vars['alarm_description'] = markdown_to_html(notification.alarm_description)
+                template_vars['alarm_description'] = markdown.markdown(notification.alarm_description)
             else:
                 self._log.error('Invalid configuration of E-Mail plugin. Unsupported template.mime_type: %s',
                                 self._template_mime_type)
