@@ -39,6 +39,7 @@ class Notification(object):
         'dimensions',
         'id',
         'message',
+        'metric_values',
         'name',
         'notification_timestamp',
         'old_state',
