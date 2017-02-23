@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import abc
+import datetime
 
 import six
 from jinja2 import Template
@@ -21,7 +22,6 @@ from jinja2 import Template
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractNotifier(object):
-
     def __init__(self, type):
         self._config = None
         self._type = type
@@ -48,3 +48,30 @@ class AbstractNotifier(object):
     @abc.abstractmethod
     def send_notification(self, notification):
         pass
+
+    def _format_text_for_channel(self, text_md):
+        """format markdown text (from the description) into the representation for the notification channel
+        :param text_md: input text in MarkDown
+        :return: reformatted text
+
+        The default implementation will just pass it through
+        """
+        return text_md
+
+    def _render_notification_text(self, notification, template=None):
+        """Render the text body of the notification
+
+        :param notification: notification object used to populate template variables
+        :param template: template to be used (default self._template)
+        :return: rendered Jinja2 template
+        """
+
+        if not template:
+            template = self._template
+
+        template_vars = notification.to_dict()
+        template_vars['alarm_timestamp_utc'] = str(
+            datetime.datetime.utcfromtimestamp(notification.alarm_timestamp)).replace(" ", "T") + 'Z'
+        # replace markdown link syntax with Slack's own one
+        template_vars['alarm_description'] = self.format_description(notification.alarm_description)
+        return template.render(**template_vars)

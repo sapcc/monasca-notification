@@ -148,6 +148,22 @@ class EmailNotifier(abstract_notifier.AbstractNotifier):
             self._log.exception("Unable to connect to email server.")
             return False
 
+    def _format_text_for_channel(self, text_md):
+        """Override behaviour for mail
+
+        :param text_md: to be converted into plaintext or HTML
+        :return: converted mail body
+        """
+        if not self._template_mime_type or self._template_mime_type == "text/plain":
+            # replace markdown link syntax in plain text mails
+            return re.sub(r"\[(.*)\]\((.*)\)", r"\1 (\2)", text_md)
+        elif self._template_mime_type == "text/html":
+            return markdown.markdown(text_md)
+        else:
+            self._log.error('Invalid configuration of E-Mail plugin. Unsupported template.mime_type: %s',
+                            self._template_mime_type)
+            return text_md
+
     def _create_msg(self, hostname, notification, targethost=None):
         """Create notification messages based on a Jinja2 templates using notification attributes as variables.
 
@@ -160,19 +176,8 @@ class EmailNotifier(abstract_notifier.AbstractNotifier):
         """
 
         if self._template:
-            template_vars = notification.to_dict()
-            if not self._template_mime_type or self._template_mime_type == "text/plain":
-                # replace markdown link syntax in plain text mails
-                template_vars['alarm_description'] = re.sub(r"\[(.*)\]\((.*)\)", r"\1 (\2)",
-                                                            notification.alarm_description)
-            elif self._template_mime_type == "text/html":
-                template_vars['alarm_description'] = markdown.markdown(notification.alarm_description)
-            else:
-                self._log.error('Invalid configuration of E-Mail plugin. Unsupported template.mime_type: %s',
-                                self._template_mime_type)
-
-            text = self._template.render(**template_vars)
-            subject = self._subject_template.render(**template_vars)
+            text = self._render_notification_text(notification)
+            subject = self._render_notification_text(notification, template=self._subject_template)
             _, subtype = self._template_mime_type.split('/', 1) if self._template_mime_type else 'plain'
             msg = email.mime.text.MIMEText(text.encode('utf-8'), subtype)
             msg['Subject'] = subject.encode("utf-8")

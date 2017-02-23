@@ -44,14 +44,14 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
 
     def _build_slack_message(self, notification):
         """Builds slack message body
+
+        :param notification: input notification message
+        :return: message formatted for Slack
+        """"""
+
         """
         if self._template:
-            template_vars = notification.to_dict()
-            # replace markdown link syntax with Slack's own one
-            template_vars['alarm_description'] = re.sub(r"\[(.*)\]\((.*)\)", r"<\2|\1>",
-                                                        notification.alarm_description.replace(
-                                                            '\n', r'\n'))
-            text = self._template.render(**template_vars)
+            text = self._render_notification_text(notification)
             if not self._template_mime_type or self._template_mime_type == "text/plain":
                 return dict(text=text)
             elif self._template_mime_type == "application/json":
@@ -65,6 +65,9 @@ class SlackNotifier(abstract_notifier.AbstractNotifier):
                                 self._template_mime_type)
 
         return dict(text='{} - {}: {}'.format(notification.state, notification.alarm_description, notification.message))
+
+    def _format_text_for_channel(self, text_md):
+        return re.sub(r"\[(.*)\]\((.*)\)", r"<\2|\1>", text_md.replace('\n', r'\n'))
 
     @STATSD_TIMER.timed(NOTIFICATION_SEND_TIMER, dimensions={'notification_type': 'slack'})
     def send_notification(self, notification):
