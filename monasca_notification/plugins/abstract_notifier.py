@@ -73,5 +73,5 @@ class AbstractNotifier(object):
         template_vars['alarm_timestamp_utc'] = str(
             datetime.datetime.utcfromtimestamp(notification.alarm_timestamp)).replace(" ", "T") + 'Z'
         # replace markdown link syntax with Slack's own one
-        template_vars['alarm_description'] = self.format_description(notification.alarm_description)
+        template_vars['alarm_description'] = self._format_text_for_channel(notification.alarm_description)
         return template.render(**template_vars)
