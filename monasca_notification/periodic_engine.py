@@ -52,8 +52,6 @@ class PeriodicEngine(BaseEngine):
         # Period changed
         if period != self._period:
             return False
-        if type != "webhook":
-            return False
 
         return True
 
