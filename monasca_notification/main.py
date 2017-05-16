@@ -112,9 +112,8 @@ def main(argv=None):
     processors.append(multiprocessing.Process(
         target=start_process, args=(RetryEngine, config)))
 
-    if 60 in config['kafka']['periodic']:
-        processors.append(multiprocessing.Process(
-            target=start_process, args=(PeriodicEngine, config, 60)))
+    processors.append(multiprocessing.Process(
+        target=start_process, args=(PeriodicEngine, config, 60)))
 
     try:
         log.info('Starting processes')

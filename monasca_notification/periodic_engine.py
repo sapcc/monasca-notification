@@ -49,19 +49,24 @@ class PeriodicEngine(BaseEngine):
         # Alarm state changed
         if current_state != original_state:
             return False
-        # Period changed
-        if period != self._period:
-            return False
 
         return True
 
     def do_message(self, raw_notification):
         message = raw_notification[1].message.value
         notification_data = json.loads(message)
-
         notification = construct_notification_object(self._db_repo, notification_data)
 
         if notification is None:
+            self._consumer.commit()
+            return
+
+        if not notification_data['notification_timestamp']:
+            log.debug(u"Notification Timestamp empty for {} with name {} "
+                      u"at {} with period {}.  ".format(notification.type,
+                                                        notification.name,
+                                                        notification.notification_timestamp,
+                                                        notification.period))
             self._consumer.commit()
             return
 
@@ -73,12 +78,22 @@ class PeriodicEngine(BaseEngine):
             wait_duration = notification.period - (
                 time.time() - notification_data['notification_timestamp'])
 
-            if wait_duration > 0:
-                time.sleep(wait_duration)
+            if wait_duration < 0:
+                log.debug(u"Periodic Firing for {} with name {} "
+                          u"at {} with period {}.  ".format(notification.type,
+                                             notification.name,
+                                             notification_data['notification_timestamp'],
+                                             notification.period))
+                notification.notification_timestamp = time.time()
+                self._notifier.send([notification])
+            else:
+                # log.debug(u"Periodic Waiting for {} with name {} "
+                #           u"at {} with period {}.  ".format(notification.type,
+                #                              notification.name,
+                #                              notification_data['notification_timestamp'],
+                #                              notification.period))
+                notification.notification_timestamp = notification_data['notification_timestamp']
 
-            notification.notification_timestamp = time.time()
-
-            self._notifier.send([notification])
             self.publish_messages([notification], self._topic_name)
 
         self._consumer.commit()

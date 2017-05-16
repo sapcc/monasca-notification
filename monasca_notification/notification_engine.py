@@ -38,10 +38,11 @@ class NotificationEngine(BaseEngine):
 
     def _add_periodic_notifications(self, notifications):
         for notification in notifications:
+            log.debug('AlarmName >|%s|< Period >|%d|<', notification.alarm_name, notification.period)
             topic = notification.periodic_topic
-            if topic in self._config['kafka']['periodic'] and notification.period:
+            if notification.period:
                 notification.notification_timestamp = time.time()
-                self._producer.publish(self._config['kafka']['periodic'][topic],
+                self._producer.publish(self._config['kafka']['periodic'][60],
                                        [notification.to_json()])
 
     def do_message(self, alarm):
