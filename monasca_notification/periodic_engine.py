@@ -78,6 +78,7 @@ class PeriodicEngine(BaseEngine):
             wait_duration = notification.period - (
                 time.time() - notification_data['notification_timestamp'])
 
+            log.debug(u"Wait Duration {}".format(wait_duration))
             if wait_duration < 0:
                 log.debug(u"Periodic Firing for {} with name {} "
                           u"at {} with period {}.  ".format(notification.type,
@@ -87,11 +88,11 @@ class PeriodicEngine(BaseEngine):
                 notification.notification_timestamp = time.time()
                 self._notifier.send([notification])
             else:
-                # log.debug(u"Periodic Waiting for {} with name {} "
-                #           u"at {} with period {}.  ".format(notification.type,
-                #                              notification.name,
-                #                              notification_data['notification_timestamp'],
-                #                              notification.period))
+                log.debug(u"Periodic Waiting for {} with name {} "
+                          u"at {} with period {}.  ".format(notification.type,
+                                             notification.name,
+                                             notification_data['notification_timestamp'],
+                                             notification.period))
                 notification.notification_timestamp = notification_data['notification_timestamp']
 
             self.publish_messages([notification], self._topic_name)

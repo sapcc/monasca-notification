@@ -38,7 +38,7 @@ class NotificationEngine(BaseEngine):
 
     def _add_periodic_notifications(self, notifications):
         for notification in notifications:
-            log.debug('AlarmName >|%s|< Period >|%d|<', notification.alarm_name, notification.period)
+            log.debug('AlarmName >|%s|< State >|%s|< Period >|%d|<', notification.alarm_name, notification.state, notification.period)
             topic = notification.periodic_topic
             if notification.period:
                 notification.notification_timestamp = time.time()
