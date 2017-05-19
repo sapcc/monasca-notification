@@ -49,6 +49,9 @@ class PeriodicEngine(BaseEngine):
         # Alarm state changed
         if current_state != original_state:
             return False
+        # Don't repeat OK alarms
+        if current_state == "OK":
+            return False
 
         return True
 
@@ -88,12 +91,13 @@ class PeriodicEngine(BaseEngine):
                 notification.notification_timestamp = time.time()
                 self._notifier.send([notification])
             else:
-                log.debug(u"Periodic Waiting for {} with name {} "
-                          u"at {} with period {}.  ".format(notification.type,
-                                             notification.name,
-                                             notification_data['notification_timestamp'],
-                                             notification.period))
+                # log.debug(u"Periodic Waiting for {} with name {} "
+                #           u"at {} with period {}.  ".format(notification.type,
+                #                              notification.name,
+                #                              notification_data['notification_timestamp'],
+                #                              notification.period))
                 notification.notification_timestamp = notification_data['notification_timestamp']
+                time.sleep(1)
 
             self.publish_messages([notification], self._topic_name)
 
